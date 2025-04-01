@@ -16,6 +16,7 @@ build/
 .env
 application-prod.yml
 application-dev.yml
+application-db.yml
 bin/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
