@@ -1,5 +1,7 @@
 package com.bangkoo.back.config;
 
+import com.bangkoo.back.service.CustomOAuth2UserService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.*;
@@ -17,7 +19,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * 최초 작성자 : 김동규
@@ -28,69 +29,89 @@ import java.util.List;
 @Configuration
 public class SecurityConfig {
 
-    /**
-     * 보안 필터 체인 설정
-     * - CORS 설정 적용
-     * - CSRF 비활성화
-     * - 세션 상태를 STATELESS로 설정 (JWT 기반 인증을 위함)
-     * - 모든 요청을 허용 (개발용 설정, 추후 인증 필요)
-     *
-     * @param http HttpSecurity 객체
-     * @return SecurityFilterChain 보안 필터 체인
-     * @throws Exception 예외 발생 시
-     */
+    private final CustomOAuth2UserService customOAuth2UserService;
+
+    // 생성자 주입 방식으로 customOAuth2UserService 주입
+    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService) {
+        this.customOAuth2UserService = customOAuth2UserService;
+    }
+
+    @Value("${KAKAO_APP_CLIENT_ID}")
+    private String clientId;
+
+    @Value("${KAKAO_APP_CLIENT_SECRET}")
+    private String clientSecret;
+
+    public static final String[] allowUrls= {
+            "/swagger-ui/**",
+            "/swagger-resources/**",
+            "/v3/api-docs/**",
+            "/api/v1/ports/**",
+            "/api/v1/replies/**",
+            "/login",
+            "/auth/login/code/kakao/**",
+    };
+
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, InMemoryClientRegistrationRepository clientRegistrationRepository) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/**/**").permitAll()
+                        .requestMatchers(allowUrls).permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login")
-                        .authorizationEndpoint(authorization -> authorization.baseUri("/oauth2/authorize"))
+                        .defaultSuccessUrl("/auth/login/code/kakao", true)
+                        .authorizationEndpoint(authorization -> authorization.baseUri("/oauth2/authorize/kakao"))
                         .redirectionEndpoint(redirection -> redirection.baseUri("/login/oauth2/code/kakao"))
-                        .clientRegistrationRepository(clientRegistrationRepository())
+                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                 );
-
-        // JWT 필터 추가 예정
-        // http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
     /**
      * CORS 설정 Bean
-     * - 프론트엔드 요청을 허용하기 위해 도메인, 메서드, 헤더 등 설정
-     * - allowCredentials(true): 인증정보 포함 허용 (예: 쿠키)
-     *
-     * @return CorsConfigurationSource CORS 설정 정보
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000")); // 프론트엔드 URL
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L); // 1시간 동안 preflight 요청 캐싱
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 
+    @Bean
+    public ClientRegistrationRepository clientRegistrationRepository() {
+        return new InMemoryClientRegistrationRepository(this.kakaoClientRegistration());
+    }
+
+    private ClientRegistration kakaoClientRegistration() {
+        return ClientRegistration.withRegistrationId("kakao")
+                .clientId(clientId)
+                .clientSecret(clientSecret)
+                .redirectUri("http://localhost:8080/login/oauth2/code/kakao")
+                .authorizationUri("https://kauth.kakao.com/oauth/authorize")
+                .tokenUri("https://kauth.kakao.com/oauth/token")
+                .userInfoUri("https://kapi.kakao.com/v2/user/me")
+                .userNameAttributeName("id")
+                .clientName("Kakao")
+                .authorizationGrantType(org.springframework.security.oauth2.core.AuthorizationGrantType.AUTHORIZATION_CODE)
+                .build();
+    }
+
     /**
      * 인증 매니저 Bean
-     * - AuthenticationManager를 수동으로 등록
-     *
-     * @param configuration AuthenticationConfiguration 객체
-     * @return AuthenticationManager 인증 매니저
-     * @throws Exception 예외 발생 시
      */
     @Bean
     public AuthenticationManager authenticationManager(
@@ -101,48 +122,9 @@ public class SecurityConfig {
 
     /**
      * 비밀번호 암호화용 PasswordEncoder Bean
-     * - BCrypt 알고리즘 사용
-     *
-     * @return PasswordEncoder 인코더 객체
      */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    // JWT 인증 필터 Bean 등록 예정
-    // @Bean
-    // public JwtAuthenticationFilter jwtAuthenticationFilter() {
-    //     return new JwtAuthenticationFilter();
-    // }
-
-    /**
-     * 카카오 클라이언트 등록 Bean
-     * - 카카오 OAuth2 로그인 정보 등록
-     *
-     * @return ClientRegistrationRepository 카카오 클라이언트 등록 저장소
-     */
-    @Bean
-    public ClientRegistrationRepository clientRegistrationRepository() {
-        return new InMemoryClientRegistrationRepository(this.kakakoClientRegistration());
-    }
-
-    /**
-     * 카카오 OAuth2 클라이언트 등록 정보
-     *
-     * @return ClientRegistration 카카오 클라이언트 등록 객체a
-     */
-    private ClientRegistration kakakoClientRegistration() {
-        return ClientRegistration.withRegistrationId("kakao")
-                .clientId("${KAKAO_APP_CLIENT_ID}")
-                .clientSecret("${KAKAO_APP_CLIENT_SECRET}")
-                .scope("profile_nickname","account_email")
-                .authorizationUri("https://kakao.com/oauth2/authorize")
-                .tokenUri("https://kakao.com/oauth2/token")
-                .userInfoUri("https://kakao.com/v2/user/me")
-                .userNameAttributeName("id")
-                .clientName("kakao")
-                .redirectUri("http://localhost:8080/login/oauth2/code/kakao")
-                .build();
     }
 }
