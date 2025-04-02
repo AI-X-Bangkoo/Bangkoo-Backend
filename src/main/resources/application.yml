@@ -10,3 +10,25 @@ server:
 logging:
   level:
     root: INFO
+
+
+security:
+  oauth2:
+    client:
+      registration:
+        kakao:
+          client-id: ${KAKAO_APP_CLIENT_ID}  # .env에서 가져옴
+          client-secret: ${KAKAO_APP_CLIENT_SECRET}  # .env에서 가져옴
+          client-authentication-method: client_secret_post
+          authorization-grant-type: authorization_code
+          redirect-uri: "http://localhost:8080/login/oauth2/code/kakao"
+          scope:
+            - profile_nickname
+            - account_email
+
+      provider:
+        kakao:
+          authorization-uri: https://kauth.kakao.com/oauth/authorize
+          token-uri: https://kauth.kakao.com/oauth/token
+          user-info-uri: https://kapi.kakao.com/v2/user/me
+          user-name-attribute: id

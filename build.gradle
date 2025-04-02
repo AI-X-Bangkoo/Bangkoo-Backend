@@ -27,6 +27,12 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+
+    //카카오 관련
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    //.env 관련
+    implementation 'me.paulschwarz:spring-dotenv:3.0.0'
 }
 
 tasks.named('test') {
