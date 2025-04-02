@@ -8,12 +8,16 @@ import org.springframework.security.config.annotation.web.builders.*;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * 최초 작성자 : 김동규
@@ -36,7 +40,7 @@ public class SecurityConfig {
      * @throws Exception 예외 발생 시
      */
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, InMemoryClientRegistrationRepository clientRegistrationRepository) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
@@ -45,6 +49,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/**/**").permitAll()
                         .anyRequest().authenticated()
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/login")
+                        .authorizationEndpoint(authorization -> authorization.baseUri("/oauth2/authorize"))
+                        .redirectionEndpoint(redirection -> redirection.baseUri("/login/oauth2/code/kakao"))
+                        .clientRegistrationRepository(clientRegistrationRepository())
                 );
 
         // JWT 필터 추가 예정
@@ -105,4 +115,34 @@ public class SecurityConfig {
     // public JwtAuthenticationFilter jwtAuthenticationFilter() {
     //     return new JwtAuthenticationFilter();
     // }
+
+    /**
+     * 카카오 클라이언트 등록 Bean
+     * - 카카오 OAuth2 로그인 정보 등록
+     *
+     * @return ClientRegistrationRepository 카카오 클라이언트 등록 저장소
+     */
+    @Bean
+    public ClientRegistrationRepository clientRegistrationRepository() {
+        return new InMemoryClientRegistrationRepository(this.kakakoClientRegistration());
+    }
+
+    /**
+     * 카카오 OAuth2 클라이언트 등록 정보
+     *
+     * @return ClientRegistration 카카오 클라이언트 등록 객체a
+     */
+    private ClientRegistration kakakoClientRegistration() {
+        return ClientRegistration.withRegistrationId("kakao")
+                .clientId("${KAKAO_APP_CLIENT_ID}")
+                .clientSecret("${KAKAO_APP_CLIENT_SECRET}")
+                .scope("profile_nickname","account_email")
+                .authorizationUri("https://kakao.com/oauth2/authorize")
+                .tokenUri("https://kakao.com/oauth2/token")
+                .userInfoUri("https://kakao.com/v2/user/me")
+                .userNameAttributeName("id")
+                .clientName("kakao")
+                .redirectUri("http://localhost:8080/login/oauth2/code/kakao")
+                .build();
+    }
 }
