@@ -1,4 +1,4 @@
-package com.bangkoo.back.controller;
+package com.bangkoo.back.controller.auth;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -35,5 +35,9 @@ public class kakaoAuthController {
         return "로그인 페이지로 이동";
     }
 
+    /**
+     * 카카오 로그인 후 사용자 정보 출력 예시
+     * /login/oauth2/code/kakao로 리다이렉트 될 때 사용자 정보를 받는 방식
+     */
 
 }
