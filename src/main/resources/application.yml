@@ -1,8 +1,8 @@
 spring:
-  config:
-    import: "classpath:application-db.yml"
   profiles:
     active: dev
+  config:
+    import: "classpath:application-db.yml"
 
 server:
   port: 8080
