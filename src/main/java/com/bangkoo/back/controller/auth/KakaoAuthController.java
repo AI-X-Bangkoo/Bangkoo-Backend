@@ -1,10 +1,15 @@
 package com.bangkoo.back.controller.auth;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 public class KakaoAuthController {
     /**
@@ -15,7 +20,12 @@ public class KakaoAuthController {
      * @return 로그인 성공 메시지 또는 사용자 정보
      */
     @GetMapping("/oauth/login/code/kakao")
-    public String kakakoLoginSuccess(@AuthenticationPrincipal OAuth2User principal){
+    public ResponseEntity<String> kakaoLoginSuccess(@AuthenticationPrincipal OAuth2User principal){
+
+        if (principal == null) {
+            return ResponseEntity.status(401).body("로그인되지 않은 사용자입니다.");
+        }
+
         //OAuth2User에서 카카오 사용자 정보 추출
         String username = principal.getAttribute("nickname");
         String useremail = principal.getAttribute("email");
@@ -23,7 +33,7 @@ public class KakaoAuthController {
         System.out.println("로그인 성공 :"+ username + ", 이메일:"+ useremail);
 
         //로그인 후 리턴할 메시지와 페이지
-        return "success";
+        return ResponseEntity.ok("로그인 성공 :" +username + "(" + useremail + ")");
     }
 
     /**
@@ -47,5 +57,11 @@ public class KakaoAuthController {
             return "사용자 정보:" + name + ", 이메일:" + email;
         }
         return "로그인된 사용자가 없습니다.";
+    }
+
+    @GetMapping("/login/oauth2/code/kakao")
+    public ResponseEntity<String> kakaoCallback(@RequestParam("code") String code) {
+        System.out.println("인가 코드: {}" + code);
+        return ResponseEntity.ok("인가 코드: " + code);
     }
 }

@@ -50,6 +50,8 @@ public class SecurityConfig {
             "/api/v1/replies/**",
             "/login",
             "/auth/login/code/kakao/**",
+            "/oauth/**",
+            "/callback/**"
     };
 
     @Bean
@@ -65,7 +67,8 @@ public class SecurityConfig {
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login")
-                        .defaultSuccessUrl("/auth/login/code/kakao", true)
+                        .defaultSuccessUrl("/user", true)
+                        .failureUrl("/login?error=true")
                         .authorizationEndpoint(authorization -> authorization.baseUri("/oauth2/authorize/kakao"))
                         .redirectionEndpoint(redirection -> redirection.baseUri("/login/oauth2/code/kakao"))
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
