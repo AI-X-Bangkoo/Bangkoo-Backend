@@ -10,6 +10,7 @@ server:
 logging:
   level:
     root: INFO
+    org.springframework.security: DEBUG
 
 
 security:
@@ -22,10 +23,7 @@ security:
           client-authentication-method: client_secret_post
           authorization-grant-type: authorization_code
           redirect-uri: "http://localhost:8080/login/oauth2/code/kakao"
-          scope:
-            - profile_nickname
-            - account_email
-
+          scope: profile_nickname,account_email
       provider:
         kakao:
           authorization-uri: https://kauth.kakao.com/oauth/authorize
