@@ -52,8 +52,7 @@ public class SecurityConfig {
             "/login",
             "/auth/login/code/kakao/**",
             "/oauth/**",
-            "/callback/**",
-            "/api/**"
+            "/callback/**"
     };
 
     @Bean
@@ -64,6 +63,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/recommend").permitAll()
                         .requestMatchers(allowUrls).permitAll()
                         .anyRequest().authenticated()
                 )
