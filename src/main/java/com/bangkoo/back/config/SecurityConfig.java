@@ -4,6 +4,7 @@ import com.bangkoo.back.service.CustomOAuth2UserService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.*;
 import org.springframework.security.config.annotation.authentication.configuration.*;
 import org.springframework.security.config.annotation.web.builders.*;
@@ -51,7 +52,8 @@ public class SecurityConfig {
             "/login",
             "/auth/login/code/kakao/**",
             "/oauth/**",
-            "/callback/**"
+            "/callback/**",
+            "/api/**"
     };
 
     @Bean
@@ -59,23 +61,17 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(allowUrls).permitAll()
                         .anyRequest().authenticated()
                 )
-                .oauth2Login(oauth2 -> oauth2
-                        .loginPage("/login")
-                        .defaultSuccessUrl("/user", true)
-                        .failureUrl("/login?error=true")
-                        .authorizationEndpoint(authorization -> authorization.baseUri("/oauth2/authorize/kakao"))
-                        .redirectionEndpoint(redirection -> redirection.baseUri("/login/oauth2/code/kakao"))
-                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
-                );
+                .oauth2Login(oauth2 -> oauth2.disable()); // ← 로그인 완전 비활성화 시
 
         return http.build();
     }
+
 
     /**
      * CORS 설정 Bean
