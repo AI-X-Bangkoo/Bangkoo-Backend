@@ -58,7 +58,7 @@ public class SearchService {
         if (style != null) body.add("style", style);
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
-        String url = aiServerUrl + "/search";
+        String url = aiServerUrl + "/api/search";
         return restTemplate.postForObject(url, request, String.class);
     }
 
@@ -84,7 +84,7 @@ public class SearchService {
 
             HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
-            String fastapiUrl = "http://localhost:8000/search/image";
+            String fastapiUrl = aiServerUrl + "/search/image";
             return new RestTemplate().postForObject(fastapiUrl, requestEntity, String.class);
 
         } catch (IOException e) {

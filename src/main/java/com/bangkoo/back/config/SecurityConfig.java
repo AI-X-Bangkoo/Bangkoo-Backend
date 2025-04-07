@@ -56,7 +56,11 @@ public class SecurityConfig {
             "/kakao/callback",
             "/oauth/callback/kakao",
             "/kakao/login",
-            "/favicon.ico"
+            "/favicon.ico",
+            "api/search",
+            "api/search/image",
+            "api/recommend",
+            "api/recommend-or-search"
     };
 
 
