@@ -13,36 +13,36 @@ import java.io.IOException;
  * 최초 작성자: 김동규
  * 최초 작성일: 2025-04-03
  *
- * AI 추천 요청 컨트롤러
+ * AI 추천 및 검색 컨트롤러
  */
 @RestController
-@RequestMapping("/api/recommend")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 public class RecommendController {
 
     private final RecommendService recommendService;
 
     /**
-     * 이미지 기반 AI 추천 요청
+     * 이미지 또는 텍스트 기반 AI 추천/검색 통합 요청
      *
-     * @param image     이미지 파일
-     * @param query     추천 텍스트
-     * @param min_price 최소 가격
-     * @param max_price 최대 가격
+     * @param image     이미지 파일 (선택)
+     * @param query     텍스트 쿼리
+     * @param minPrice  최소 가격
+     * @param maxPrice  최대 가격
      * @param keyword   키워드
      * @param style     스타일
-     * @return 추천 결과
+     * @return 추천 또는 검색 결과
      */
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> recommend(
-            @RequestPart("image") MultipartFile image,
-            @RequestParam("query") String query,
-            @RequestParam(value = "min_price", required = false) Integer minPrice,
-            @RequestParam(value = "max_price", required = false) Integer maxPrice,
-            @RequestParam(value = "keyword", required = false) String keyword,
-            @RequestParam(value = "style", required = false) String style
+    @PostMapping(value = "/recommend-or-search", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<String> handleRecommendOrSearch(
+            @RequestParam(required = false) MultipartFile image,
+            @RequestParam String query,
+            @RequestParam(required = false) Integer minPrice,
+            @RequestParam(required = false) Integer maxPrice,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String style
     ) throws IOException {
-        String result = recommendService.recommend(image, query, minPrice, maxPrice, keyword, style);
+        String result = recommendService.recommendOrSearch(image, query, minPrice, maxPrice, keyword, style);
         return ResponseEntity.ok(result);
     }
 }
