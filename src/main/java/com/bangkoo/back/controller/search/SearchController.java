@@ -4,6 +4,7 @@ import com.bangkoo.back.service.search.SearchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 최초 작성자: 김동규
@@ -41,5 +42,29 @@ public class SearchController {
         String result = searchService.search(query, min_price, max_price, keyword, style);
         return ResponseEntity.ok(result);
     }
+
+    /**
+     * 사용자가 업로드한 이미지를 기반으로 유사한 제품 검색
+     *
+     * @param file 업로드된 이미지 파일
+     * @param min_price 최소 금액 (선택)
+     * @param max_price 최대 금액 (선택)
+     * @param keyword 키워드 필터 (선택)
+     * @param style 스타일 필터 (선택)
+     * @return 검색 결과
+     */
+    @PostMapping("/image")
+    public ResponseEntity<String> searchByImage(
+            @RequestParam(required = false) MultipartFile file,
+            @RequestParam(required = false) String url,
+            @RequestParam(required = false) Integer min_price,
+            @RequestParam(required = false) Integer max_price,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String style
+    ) {
+        String result = searchService.searchByImage(file, url, min_price, max_price, keyword, style);
+        return ResponseEntity.ok(result);
+    }
+
 
 }
