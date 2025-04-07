@@ -1,19 +1,20 @@
 package com.bangkoo.back.config;
 
-import com.bangkoo.back.service.CustomOAuth2UserService;
-import org.springframework.beans.factory.annotation.Value;
+
+import com.bangkoo.back.security.JwtAuthenticationFilter;
+import com.bangkoo.back.utils.JwtUtil;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.*;
 import org.springframework.security.config.annotation.authentication.configuration.*;
 import org.springframework.security.config.annotation.web.builders.*;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.client.registration.ClientRegistration;
-import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
-import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -27,56 +28,53 @@ import java.util.Arrays;
  * Spring Security 보안 설정 클래스
  * */
 @Configuration
+@EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final CustomOAuth2UserService customOAuth2UserService;
+    private final JwtUtil jwtUtil;
 
-    // 생성자 주입 방식으로 customOAuth2UserService 주입
-    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService) {
-        this.customOAuth2UserService = customOAuth2UserService;
-    }
 
-    @Value("${KAKAO_APP_CLIENT_ID}")
-    private String clientId;
 
-    @Value("${KAKAO_APP_CLIENT_SECRET}")
-    private String clientSecret;
-
+    /**
+     *
+     * 허용 주소 목록
+     *  alloUrls
+     */
     public static final String[] allowUrls= {
             "/swagger-ui/**",
             "/swagger-resources/**",
             "/v3/api-docs/**",
-            "/api/v1/ports/**",
-            "/api/v1/replies/**",
             "/login",
-            "/auth/login/code/kakao/**",
-            "/oauth/**",
-            "/callback/**"
+            "/",
+            "/oauth2/**",
+            "/localhost:3000/**",
+            "/error",
+            "/auth/**",
+            "/kakao/login",
+            "/kakao/callback",
+            "/oauth/callback/kakao",
+            "/kakao/login",
+            "/favicon.ico"
     };
+
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(allowUrls).permitAll()
                         .anyRequest().authenticated()
                 )
-                .oauth2Login(oauth2 -> oauth2
-                        .loginPage("/login")
-                        .defaultSuccessUrl("/user", true)
-                        .failureUrl("/login?error=true")
-                        .authorizationEndpoint(authorization -> authorization.baseUri("/oauth2/authorize/kakao"))
-                        .redirectionEndpoint(redirection -> redirection.baseUri("/login/oauth2/code/kakao"))
-                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
-                );
+                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil),
+                        UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-
     /**
      * CORS 설정 Bean
      */
@@ -85,8 +83,9 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setAllowCredentials(true);
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        configuration.setAllowedHeaders(Arrays.asList("Content-Type"));
+        configuration.setAllowCredentials(true); // HttpOnly 쿠키 사용 시 필요
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -94,24 +93,6 @@ public class SecurityConfig {
         return source;
     }
 
-    @Bean
-    public ClientRegistrationRepository clientRegistrationRepository() {
-        return new InMemoryClientRegistrationRepository(this.kakaoClientRegistration());
-    }
-
-    private ClientRegistration kakaoClientRegistration() {
-        return ClientRegistration.withRegistrationId("kakao")
-                .clientId(clientId)
-                .clientSecret(clientSecret)
-                .redirectUri("http://localhost:8080/login/oauth2/code/kakao")
-                .authorizationUri("https://kauth.kakao.com/oauth/authorize")
-                .tokenUri("https://kauth.kakao.com/oauth/token")
-                .userInfoUri("https://kapi.kakao.com/v2/user/me")
-                .userNameAttributeName("id")
-                .clientName("Kakao")
-                .authorizationGrantType(org.springframework.security.oauth2.core.AuthorizationGrantType.AUTHORIZATION_CODE)
-                .build();
-    }
 
     /**
      * 인증 매니저 Bean
