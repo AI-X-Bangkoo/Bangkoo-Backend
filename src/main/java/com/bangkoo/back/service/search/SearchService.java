@@ -1,11 +1,15 @@
 package com.bangkoo.back.service.search;
 
+import com.bangkoo.back.utils.MultipartInputStreamFileResource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 /**
  * 최초 작성자: 김동규
@@ -57,5 +61,36 @@ public class SearchService {
         String url = aiServerUrl + "/search";
         return restTemplate.postForObject(url, request, String.class);
     }
+
+    public String searchByImage(MultipartFile file, String url, Integer minPrice, Integer maxPrice, String keyword, String style) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+
+            if (file != null) {
+                body.add("file", new MultipartInputStreamFileResource(file.getInputStream(), file.getOriginalFilename()));
+            } else if (url != null) {
+                body.add("url", url);
+            } else {
+                throw new IllegalArgumentException("file 또는 url 중 하나는 반드시 있어야 합니다.");
+            }
+
+            if (minPrice != null) body.add("min_price", minPrice.toString());
+            if (maxPrice != null) body.add("max_price", maxPrice.toString());
+            if (keyword != null) body.add("keyword", keyword);
+            if (style != null) body.add("style", style);
+
+            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+            String fastapiUrl = "http://localhost:8000/search/image";
+            return new RestTemplate().postForObject(fastapiUrl, requestEntity, String.class);
+
+        } catch (IOException e) {
+            throw new RuntimeException("이미지 검색 실패", e);
+        }
+    }
+
 
 }

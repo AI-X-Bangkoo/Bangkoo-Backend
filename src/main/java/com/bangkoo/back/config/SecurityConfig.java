@@ -69,7 +69,7 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/recommend").permitAll()
+                        .requestMatchers("/api/search").permitAll()
                         .requestMatchers(allowUrls).permitAll()
                         .anyRequest().authenticated()
                 )
