@@ -6,6 +6,7 @@ import com.bangkoo.back.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.*;
 import org.springframework.security.config.annotation.authentication.configuration.*;
 import org.springframework.security.config.annotation.web.builders.*;
@@ -55,7 +56,11 @@ public class SecurityConfig {
             "/kakao/callback",
             "/oauth/callback/kakao",
             "/kakao/login",
-            "/favicon.ico"
+            "/favicon.ico",
+            "api/search",
+            "api/search/image",
+            "api/recommend",
+            "api/recommend-or-search"
     };
 
 
@@ -67,6 +72,8 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/search").permitAll()
                         .requestMatchers(allowUrls).permitAll()
                         .anyRequest().authenticated()
                 )
@@ -75,26 +82,24 @@ public class SecurityConfig {
 
         return http.build();
     }
+  
     /**
      * CORS 설정 Bean
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-
-        // ✅ allowedOrigins → allowedOriginPatterns 로 변경
-        configuration.setAllowedOriginPatterns(Arrays.asList("http://localhost:3000"));
-
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
-        configuration.setAllowCredentials(true); // ✅ HttpOnly 쿠키 사용 시 꼭 필요
+        configuration.setAllowedHeaders(Arrays.asList("Content-Type"));
+        configuration.setAllowCredentials(true); // HttpOnly 쿠키 사용 시 필요
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
-
 
 
     /**
