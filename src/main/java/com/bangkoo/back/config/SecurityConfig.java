@@ -60,7 +60,8 @@ public class SecurityConfig {
             "api/search",
             "api/search/image",
             "api/recommend",
-            "api/recommend-or-search"
+            "api/recommend-or-search",
+            "api/placement"
     };
 
 
@@ -74,6 +75,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/search").permitAll()
+                        .requestMatchers("api/placement").permitAll()
                         .requestMatchers(allowUrls).permitAll()
                         .anyRequest().authenticated()
                 )
