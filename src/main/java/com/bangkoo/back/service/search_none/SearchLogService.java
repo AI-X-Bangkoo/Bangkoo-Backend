@@ -1,4 +1,4 @@
-package com.bangkoo.back.service.search;
+package com.bangkoo.back.service.search_none;
 
 import com.bangkoo.back.model.search.SearchQuery;
 import com.bangkoo.back.repository.search.SearchQueryRepository;

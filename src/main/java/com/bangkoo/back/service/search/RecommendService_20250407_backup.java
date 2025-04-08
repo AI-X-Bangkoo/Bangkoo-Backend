@@ -1,4 +1,4 @@
-package com.bangkoo.back.service.recommend;
+package com.bangkoo.back.service.search;
 
 import com.bangkoo.back.utils.MultipartInputStreamFileResource;
 import org.springframework.beans.factory.annotation.Value;

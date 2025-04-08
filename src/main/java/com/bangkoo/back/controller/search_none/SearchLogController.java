@@ -1,6 +1,6 @@
-package com.bangkoo.back.controller.search;
+package com.bangkoo.back.controller.search_none;
 
-import com.bangkoo.back.service.search.SearchLogService;
+import com.bangkoo.back.service.search_none.SearchLogService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
