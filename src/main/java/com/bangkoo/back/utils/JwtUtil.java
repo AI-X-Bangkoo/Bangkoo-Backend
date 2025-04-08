@@ -33,6 +33,7 @@ public class JwtUtil {
     @PostConstruct
     public void init() {
         String key = jwtProperties.getSecretKey();
+        System.out.println("JWT Raw Key: " + key);
         if (key == null || key.isEmpty()) {
             throw new IllegalArgumentException("JWT secret key is missing.");
         }
