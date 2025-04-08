@@ -57,7 +57,8 @@ public class SecurityConfig {
             "/oauth/callback/kakao",
             "/kakao/login",
             "/favicon.ico",
-            "/api/search"
+            "/api/search",
+            "api/placement"
     };
 
 
@@ -71,6 +72,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/search").permitAll()
+                        .requestMatchers("api/placement").permitAll()
                         .requestMatchers(allowUrls).permitAll()
                         .anyRequest().authenticated()
                 )
