@@ -20,6 +20,11 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AuthController {
 
+    /*
+    *카카오 로그인엔 대한 컨트롤러
+    *
+     */
+
     private final SocialOAuthService socialOAuthService;
     private final JwtUtil jwtUtil;
 

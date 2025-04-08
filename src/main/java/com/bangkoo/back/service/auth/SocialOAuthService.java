@@ -22,6 +22,11 @@ import java.util.Optional;
 @Service
 public class SocialOAuthService {
 
+    /**
+     * 카카오 OAuth인증을 통해 사용자의 정보를 가져오고,
+     * JWT토큰을 발급하여 클라이언트에게 응답하는 기능
+     */
+
     private static final String TOKEN_URI = "https://kauth.kakao.com/oauth/token";
     private static final String USER_INFO_URI = "https://kapi.kakao.com/v2/user/me";
 

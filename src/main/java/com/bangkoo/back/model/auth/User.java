@@ -11,6 +11,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
+
+    /**
+     * 몽고DB에 저장될 유저 정보 형식
+     */
     @Id
     private String id;
 
