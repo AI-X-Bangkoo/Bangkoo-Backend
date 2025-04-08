@@ -11,10 +11,6 @@ spring:
 server:
   port: 8080
 
-ai:
-  server:
-    url: http://localhost:8000/api
-
 logging:
   level:
     root: INFO
@@ -22,7 +18,7 @@ logging:
 
 jwt:
   algorithm: HS256
-  secret-key: dGVzdGtleXRlc3RrZXl0ZXN0a2V5dGVzdGtleQ==
+  secret-key: ${JWT_SECRET_KEY}
   access-token-expiration-ms: 1800000 # 30분
   refresh-token-expiration-ms: 604800000 # 7일
 
