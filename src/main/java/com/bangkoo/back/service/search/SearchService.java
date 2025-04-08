@@ -30,7 +30,7 @@ public class SearchService {
     }
 
     /**
-     * 이미지와 쿼리를 받아 /recommend-or-search 통합 API 호출
+     * 이미지와 쿼리를 받아 /search 통합 API 호출
      * 이미지가 없으면 텍스트 기반 검색, 쿼리에 따라 추천/검색 자동 분기
      */
     public String recommendOrSearch(
