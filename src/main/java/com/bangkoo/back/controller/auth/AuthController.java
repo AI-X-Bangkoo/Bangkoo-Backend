@@ -1,15 +1,18 @@
 package com.bangkoo.back.controller.auth;
 
-import com.bangkoo.back.model.DTO.TokenResponseDto;
-import com.bangkoo.back.model.auth.User;
+import com.bangkoo.back.model.DTO.TokenResponseDTO;
 import com.bangkoo.back.service.auth.SocialOAuthService;
-import com.bangkoo.back.service.auth.UserService;
 import com.bangkoo.back.utils.JwtUtil;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.servlet.http.HttpServletResponse;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @RestController
@@ -18,47 +21,95 @@ import java.util.Map;
 public class AuthController {
 
     private final SocialOAuthService socialOAuthService;
-    private final UserService userService;
     private final JwtUtil jwtUtil;
+
+    @Value("${kakao.client-id}")
+    private String kakaoClientId;
+
+    @Value("${kakao.redirect-uri}")
+    private String kakaoRedirectUri;
 
     // 1. 프론트에서 카카오 로그인 URL 요청 시
     @GetMapping("/kakao/login")
     public ResponseEntity<?> kakaoLogin() {
-        String clientId = "${KAKAO_APP_CLIENT_ID}";
-        String redirectUri = "${KAKAO_REDIRECT_URI}";
 
         String kakaoAuthUrl = "https://kauth.kakao.com/oauth/authorize?" +
-                "client_id=" + clientId +
-                "&redirect_uri=" + redirectUri +
+                "client_id=" + kakaoClientId +
+                "&redirect_uri=" + kakaoRedirectUri +
                 "&response_type=code";
 
-        return ResponseEntity.ok().body(Map.of("url", kakaoAuthUrl));
+        return ResponseEntity.ok(Map.of("url", kakaoAuthUrl));
     }
 
-    // 2. 카카오 인가 코드 받은 후, 백엔드 콜백 처리
-    @GetMapping("/callback/kakao")
+    // 2. 카카오 인가 코드 받은 후 JWT 발급 및 쿠키 설정
+    @PostMapping("/callback/kakao")
     public ResponseEntity<?> callback(@RequestParam("code") String code,
                                       HttpServletResponse response) {
         try {
-            TokenResponseDto tokenDto = socialOAuthService.kakaoLogin(code);
+            System.out.println("code = " + code);
+            TokenResponseDTO tokenDto = socialOAuthService.kakaoLogin(code);
 
-            // JWT를 HttpOnly 쿠키로 설정
-            jwtUtil.addJwtToCookie(response, tokenDto.getAccessToken());
+            // JWT → HttpOnly 쿠키로 저장
+            ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", tokenDto.getAccessToken())
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/")
+                    .maxAge(60 * 60) // 1시간
+                    .sameSite("Lax")
+                    .build();
 
-            return ResponseEntity.ok(Map.of(
-                    "message", "로그인 성공",
-                    "nickname", tokenDto.getNickname()
-            ));
+            // 닉네임 → 일반 쿠키로 저장 (✅ 한글 인코딩 처리 필수)
+            String encodedNickname = URLEncoder.encode(tokenDto.getNickname(), StandardCharsets.UTF_8);
+            ResponseCookie nicknameCookie = ResponseCookie.from("nickname", encodedNickname)
+                    .httpOnly(false)
+                    .secure(true)
+                    .path("/")
+                    .maxAge(60 * 60)
+                    .sameSite("Lax")
+                    .build();
+
+
+            response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
+            response.addHeader(HttpHeaders.SET_COOKIE, nicknameCookie.toString());
+
+            // 응답 DTO에서 accessToken 제거 후 반환
+            tokenDto.setAccessToken(null);
+            tokenDto.setLogin(true);
+
+            return ResponseEntity.ok(tokenDto);
+
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity
+                    .badRequest()
+                    .body(Map.of("error", e.getMessage()));
         }
     }
-    
-    @PostMapping("/oauth/kakao")
-    public ResponseEntity<TokenResponseDto> kakaoLogin(@RequestParam String code) throws Exception {
-        System.out.println("🔥 카카오 로그인 컨트롤러 도착!");
-        TokenResponseDto tokens = socialOAuthService.kakaoLogin(code);
-        return ResponseEntity.ok(tokens);
+
+    // 3. 로그아웃
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletResponse response) {
+        ResponseCookie deleteAccessToken = ResponseCookie.from("accessToken", "")
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Lax")
+                .build();
+
+        ResponseCookie deleteNickname = ResponseCookie.from("nickname", "")
+                .httpOnly(false)
+                .secure(false)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Lax")
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, deleteAccessToken.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, deleteNickname.toString());
+
+        return ResponseEntity.ok(Map.of("message", "로그아웃 완료"));
     }
+
+
 }
