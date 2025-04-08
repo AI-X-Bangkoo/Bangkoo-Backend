@@ -6,7 +6,6 @@ import com.bangkoo.back.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.*;
 import org.springframework.security.config.annotation.authentication.configuration.*;
 import org.springframework.security.config.annotation.web.builders.*;
@@ -56,11 +55,7 @@ public class SecurityConfig {
             "/kakao/callback",
             "/oauth/callback/kakao",
             "/kakao/login",
-            "/favicon.ico",
-            "api/search",
-            "api/search/image",
-            "api/recommend",
-            "api/recommend-or-search"
+            "/favicon.ico"
     };
 
 
@@ -72,8 +67,6 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/search").permitAll()
                         .requestMatchers(allowUrls).permitAll()
                         .anyRequest().authenticated()
                 )
@@ -82,7 +75,6 @@ public class SecurityConfig {
 
         return http.build();
     }
-  
     /**
      * CORS 설정 Bean
      */
