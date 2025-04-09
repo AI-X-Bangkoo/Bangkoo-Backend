@@ -1,5 +1,6 @@
 package com.bangkoo.back.model.product;
 
+import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -14,6 +15,7 @@ import java.util.List;
  * - MongoDB "products" 컬렉션에 저장됨
  * - IKEA 제품 크롤링 및 임베딩 결과를 저장하는 데 사용
  */
+@Data
 @Document(collection = "products")
 public class Product {
 
@@ -26,10 +28,13 @@ public class Product {
     private String price;          // 가격 (₩단위 포함 또는 int)
     private String link;           // IKEA 상세 링크
     private String imageUrl;       // 대표 이미지 URL
+    private String model3dUrl;     // 3D 이미지 URL(태원)
     private String csv;            // 출처 csv 파일명
 
     private List<Double> imageEmbedding; // CLIP 기반 이미지 벡터
     private List<Double> textEmbedding;  // 텍스트 기반 설명 벡터
 
     private LocalDateTime createdAt;
+
+
 }

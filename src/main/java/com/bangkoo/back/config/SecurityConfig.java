@@ -58,7 +58,8 @@ public class SecurityConfig {
             "/kakao/login",
             "/favicon.ico",
             "/api/search",
-            "api/placement"
+            "/api/placement",
+            "/api/3d-url/**"
     };
 
 
@@ -72,7 +73,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/search").permitAll()
-                        .requestMatchers("api/placement").permitAll()
+                        .requestMatchers("/api/placement").permitAll()
+                        .requestMatchers("/api/3d-url/**").permitAll()
                         .requestMatchers(allowUrls).permitAll()
                         .anyRequest().authenticated()
                 )
