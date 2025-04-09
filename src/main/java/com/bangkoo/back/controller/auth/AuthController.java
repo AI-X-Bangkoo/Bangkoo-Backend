@@ -1,6 +1,6 @@
 package com.bangkoo.back.controller.auth;
 
-import com.bangkoo.back.model.DTO.TokenResponseDTO;
+import com.bangkoo.back.DTO.TokenResponseDTO;
 import com.bangkoo.back.service.auth.SocialOAuthService;
 import com.bangkoo.back.utils.JwtUtil;
 import jakarta.servlet.http.HttpServletResponse;

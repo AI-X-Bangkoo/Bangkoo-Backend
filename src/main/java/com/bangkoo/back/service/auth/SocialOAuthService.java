@@ -2,7 +2,7 @@ package com.bangkoo.back.service.auth;
 
 import com.bangkoo.back.config.properites.JwtProperties;
 import com.bangkoo.back.config.properites.SocialOAuthProperties;
-import com.bangkoo.back.model.DTO.TokenResponseDTO;
+import com.bangkoo.back.DTO.TokenResponseDTO;
 import com.bangkoo.back.model.auth.User;
 import com.bangkoo.back.repository.auth.UserRepository;
 import com.bangkoo.back.utils.JwtUtil;
@@ -68,7 +68,7 @@ public class SocialOAuthService {
 
     // 메서드 시그니처 수정
     public TokenResponseDTO kakaoLogin(String code) throws Exception {
-        log.info("🎯 Received Kakao authorization code: {}", code);
+        log.info("카카오에서 받아오는 authorization code: {}", code);
 
         String kakaoAccessToken = getAccessToken(code);
         Map<String, Object> userInfo = getKakaoUserInfo(kakaoAccessToken);

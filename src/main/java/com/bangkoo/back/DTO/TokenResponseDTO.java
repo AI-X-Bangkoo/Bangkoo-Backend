@@ -1,4 +1,4 @@
-package com.bangkoo.back.model.DTO;
+package com.bangkoo.back.DTO;
 
 
 import lombok.*;
