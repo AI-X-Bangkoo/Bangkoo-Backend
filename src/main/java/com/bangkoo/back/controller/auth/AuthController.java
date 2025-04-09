@@ -28,7 +28,8 @@ public class AuthController {
     private final SocialOAuthService socialOAuthService;
     private final JwtUtil jwtUtil;
 
-    @Value("${kakao.client-id}")
+//    @Value("${kakao.client-id}")
+    @Value("${security.oauth2.client.registration.kakao.client-id}")
     private String kakaoClientId;
 
     @Value("${kakao.redirect-uri}")
