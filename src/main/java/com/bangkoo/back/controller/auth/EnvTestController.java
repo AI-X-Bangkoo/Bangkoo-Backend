@@ -1,4 +1,4 @@
-package com.bangkoo.back.controller.auth; // ← 너의 실제 패키지명으로 바꿔줘
+package com.bangkoo.back.controller.auth;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -8,6 +8,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class EnvTestController {
 
+
+    /**
+     * ENV 테스트용 값을 가져오는지 아닌지
+     */
     @Value("${KAKAO_APP_CLIENT_ID:NOT_FOUND}")
     private String kakaoClientId;
 

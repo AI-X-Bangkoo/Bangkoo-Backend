@@ -1,6 +1,6 @@
 package com.bangkoo.back.controller.auth;
 
-import com.bangkoo.back.model.DTO.TokenResponseDTO;
+import com.bangkoo.back.DTO.TokenResponseDTO;
 import com.bangkoo.back.service.auth.SocialOAuthService;
 import com.bangkoo.back.utils.JwtUtil;
 import jakarta.servlet.http.HttpServletResponse;
@@ -19,6 +19,11 @@ import java.util.Map;
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {
+
+    /*
+    *카카오 로그인엔 대한 컨트롤러
+    *
+     */
 
     private final SocialOAuthService socialOAuthService;
     private final JwtUtil jwtUtil;

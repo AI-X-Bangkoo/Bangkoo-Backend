@@ -6,6 +6,11 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class EnvConfig {
+
+    /**
+     * .env 파일을 읽어오는 설정
+     * @return
+     */
     @Bean
     public Dotenv dotenv() {
         return Dotenv.configure()

@@ -11,6 +11,11 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "kakao")
 public class SocialOAuthProperties {
 
+    /**
+     *
+     * 카카오 클라이언트 아이디, 시크릿, 리다이렉트 값 가져오는 곳
+     */
+
     private String clientId;
     private String clientSecret;
     private String redirectUri;
