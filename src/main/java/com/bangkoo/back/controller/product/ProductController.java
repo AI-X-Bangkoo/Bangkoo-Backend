@@ -52,23 +52,11 @@ public class ProductController {
         }
 
         Product product = dtoMapper.toEntity(requestDTO);
-        product.setTemp(false);
         Product saved = productService.save(product);
         return dtoMapper.toResponseDTO(saved);
     }
 
-    /**
-     * 임시 제품 저장 API
-     * POST /product/temp/save
-     * @param product 임시 저장할 제품 정보
-     * @return 저장된 제품
-     */
-    @PostMapping("/temp/save")
-    public ProductsResponseDTO saveTempProduct(@RequestBody Product product) {
-        product.setTemp(true);
-        Product saved = productService.save(product);
-        return dtoMapper.toResponseDTO(saved);
-    }
+
 
     /**
      * 제품 수정 API
@@ -114,15 +102,5 @@ public class ProductController {
         return productService.findById(id);
     }
 
-    /**
-     * 임시 저장된 제품만 조회 API
-     * GET /product/temp
-     * @return 임시 저장된 제품 리스트
-     */
-    @GetMapping("/temp")
-    public List<ProductsResponseDTO> getTempProducts(@RequestParam(defaultValue = "0") int page,
-                                                     @RequestParam(defaultValue = "10") int size) {
-        Page<Product> productPage = productService.findAllByIsTemp(true, page, size);
-        return productPage.map(dtoMapper::toResponseDTO).getContent();
-    }
+
 }

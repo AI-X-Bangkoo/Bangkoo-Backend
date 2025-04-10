@@ -17,6 +17,4 @@ public class ProductsRequestDTO {
     private String imageUrl;       // 대표 이미지 URL
     private String model3dUrl;     // 3D 이미지 URL(태원)
 
-
-    private boolean temp;                 //임시 저장 여부
 }

@@ -95,15 +95,4 @@ public class ProductService {
                 .orElseThrow(() -> new RuntimeException("제품을 찾지 못 했습니다."));
     }
 
-    /**
-     * 임시 데이터 여부(isTemp)에 따라 제품 목록을 조회합니다.
-     * @param isTemp 임시 데이터 여부
-     * @param page 조회할 페이지 번호
-     * @param size 페이지당 출력할 제품 수
-     * @return 페이징된 조건에 맞는 제품 리스트
-     */
-    public Page<Product> findAllByIsTemp(boolean isTemp, int page, int size){
-        Pageable pageable = PageRequest.of(page, size);  // 페이징 처리
-        return productRepository.findAllByTemp(isTemp,pageable);
-    }
 }

@@ -18,7 +18,6 @@ public class ProductDtoMapper {
         product.setLink(dto.getLink());
         product.setImageUrl(dto.getImageUrl());
         product.setModel3dUrl(dto.getModel3dUrl());
-        product.setTemp(dto.isTemp());
         product.setCreatedAt(LocalDateTime.now());
         return product;
     }

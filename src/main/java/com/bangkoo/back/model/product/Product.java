@@ -38,8 +38,6 @@ public class Product {
     private List<Double> imageEmbedding;    // CLIP 기반 이미지 벡터
     private List<Double> textEmbedding;     // 텍스트 기반 설명 벡터
 
-    private boolean temp;                 //임시 저장 여부
-
     private LocalDateTime createdAt;
 
 }
