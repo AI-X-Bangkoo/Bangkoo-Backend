@@ -1,9 +1,17 @@
 package com.bangkoo.back.controller.product;
 
+import com.bangkoo.back.DTO.product.ProductsRequestDTO;
+import com.bangkoo.back.DTO.product.ProductsResponseDTO;
+import com.bangkoo.back.mapper.ProductDtoMapper;
 import com.bangkoo.back.model.product.Product;
 import com.bangkoo.back.service.product.ProductService;
+import com.bangkoo.back.utils.JwtUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -17,6 +25,8 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService productService;
+    private final JwtUtil jwtUtil;
+    private final ProductDtoMapper dtoMapper;
 
     /**
      * 일반 제품 저장 API
@@ -25,9 +35,26 @@ public class ProductController {
      * @return 저장된 제품
      */
     @PostMapping("/save")
-    public Product saveProduct(@RequestBody Product product) {
+    public ProductsResponseDTO saveProduct(@RequestBody ProductsRequestDTO requestDTO, HttpServletRequest request) {
+
+        //JWT 토큰을 헤더에서 추출
+        String token = request.getHeader("Authorization");
+        if(token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);         //"bearer" 부분을 제거한 토큰만 추출
+        }
+
+        if (token != null && jwtUtil.isValidToken(token)) {
+            // JWT가 유효하다면 사용자 정보 추출
+            String username = jwtUtil.getEmailFromToken(token);
+            // 사용자 이름 또는 다른 정보로 비즈니스 로직을 처리 (예: 제품 소유자 정보 추가)
+        } else {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"Invalid or expired token");
+        }
+
+        Product product = dtoMapper.toEntity(requestDTO);
         product.setTemp(false);
-        return productService.save(product);
+        Product saved = productService.save(product);
+        return dtoMapper.toResponseDTO(saved);
     }
 
     /**
@@ -37,9 +64,10 @@ public class ProductController {
      * @return 저장된 제품
      */
     @PostMapping("/temp/save")
-    public Product saveTempProduct(@RequestBody Product product) {
+    public ProductsResponseDTO saveTempProduct(@RequestBody Product product) {
         product.setTemp(true);
-        return productService.save(product);
+        Product saved = productService.save(product);
+        return dtoMapper.toResponseDTO(saved);
     }
 
     /**
@@ -70,10 +98,11 @@ public class ProductController {
      * @return 모든 제품 리스트
      */
     @GetMapping
-    public List<Product> getAllProducts() {
-        return productService.findAll();
+    public List<ProductsResponseDTO> getAllProducts(@RequestParam(defaultValue = "0") int page,
+                                                    @RequestParam(defaultValue = "10") int size) {
+        Page<Product> productPage = productService.findAll(page, size);
+        return productPage.map(dtoMapper::toResponseDTO).getContent(); // 페이징된 DTO 반환
     }
-
     /**
      * 단일 제품 조회 API
      * GET /product/{id}
@@ -91,7 +120,9 @@ public class ProductController {
      * @return 임시 저장된 제품 리스트
      */
     @GetMapping("/temp")
-    public List<Product> getTempProducts(){
-        return productService.findAllByIsTemp(true);
+    public List<ProductsResponseDTO> getTempProducts(@RequestParam(defaultValue = "0") int page,
+                                                     @RequestParam(defaultValue = "10") int size) {
+        Page<Product> productPage = productService.findAllByIsTemp(true, page, size);
+        return productPage.map(dtoMapper::toResponseDTO).getContent();
     }
 }

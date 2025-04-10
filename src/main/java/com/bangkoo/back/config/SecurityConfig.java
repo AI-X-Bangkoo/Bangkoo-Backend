@@ -58,7 +58,8 @@ public class SecurityConfig {
             "/kakao/login",
             "/favicon.ico",
             "/api/search",
-            "api/placement"
+            "/api/placement",
+            "/api/3d-url/**"
     };
 
 
@@ -72,8 +73,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/search").permitAll()
-                        .requestMatchers("api/placement").permitAll()
-                        .requestMatchers(HttpMethod.GET,"/product").permitAll()
+                        .requestMatchers("/api/placement").permitAll()
+                        .requestMatchers("/api/3d-url/**").permitAll()
+                        .requestMatchers("/product/**").authenticated()     //인증된 사용자만 가능
                         .requestMatchers(allowUrls).permitAll()
                         .anyRequest().authenticated()
                 )

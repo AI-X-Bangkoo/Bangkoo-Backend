@@ -3,7 +3,11 @@ package com.bangkoo.back.service.product;
 import com.bangkoo.back.model.product.Product;
 import com.bangkoo.back.repository.product.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,6 +28,11 @@ public class ProductService {
      * @return 저장된 제품 객체
      */
     public Product save(Product product){
+
+        if(product.getName() == null || product.getImageUrl() == null){
+            throw new IllegalArgumentException("제품명과 이미지 URL은 필수입니다.");
+        }
+
         product.setCreatedAt(LocalDateTime.now());
         return productRepository.save(product);
     }
@@ -58,15 +67,22 @@ public class ProductService {
      * @param id 삭제할 제품의 ID
      */
     public void delete(String id) {
+
+        if(!productRepository.existsById(id)){
+            throw new RuntimeException("해당 제품은 존재하지 않습니다.");
+        }
         productRepository.deleteById(id);
     }
 
     /**
      * 모든 제품 목록을 조회합니다.
-     * @return 제품 리스트
+     * @param page 조회할 페이지 번호
+     * @param size 페이지당 출력할 제품 수
+     * @return 페이징된 제품 리스트
      */
-    public List<Product> findAll(){
-        return productRepository.findAll();
+    public Page<Product> findAll(int page, int size){
+        Pageable pageable = PageRequest.of(page, size);  // 페이징 처리
+        return productRepository.findAll(pageable);
     }
 
     /**
@@ -82,10 +98,12 @@ public class ProductService {
     /**
      * 임시 데이터 여부(isTemp)에 따라 제품 목록을 조회합니다.
      * @param isTemp 임시 데이터 여부
-     * @return 조건에 맞는 제품 리스트
+     * @param page 조회할 페이지 번호
+     * @param size 페이지당 출력할 제품 수
+     * @return 페이징된 조건에 맞는 제품 리스트
      */
-    public List<Product> findAllByIsTemp(boolean isTemp){
-        return productRepository.findAllByTemp(isTemp);
+    public Page<Product> findAllByIsTemp(boolean isTemp, int page, int size){
+        Pageable pageable = PageRequest.of(page, size);  // 페이징 처리
+        return productRepository.findAllByTemp(isTemp,pageable);
     }
-
 }

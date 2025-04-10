@@ -24,7 +24,7 @@ public class JwtUtil {
 
     private final JwtProperties jwtProperties;
     private SecretKey secretKey;
-    private static final String COOKIE_NAME = "accessToken"; // camelCase로 변경 권장
+    private static final String COOKIE_NAME = "accessToken";
 
     public JwtUtil(JwtProperties jwtProperties) {
         this.jwtProperties = jwtProperties;
@@ -71,7 +71,7 @@ public class JwtUtil {
     public void addNicknameToCookie(HttpServletResponse response, String nickname) {
         String encoded = URLEncoder.encode(nickname, StandardCharsets.UTF_8);
         String cookie = "nickname=" + encoded + "; Path=/; Max-Age=" + (jwtProperties.getAccessTokenExpirationMs() / 1000)
-                + "; Secure; SameSite=None"; // ❌ HttpOnly 제거 (JS에서 읽을 수 있게)
+                + "; Secure; SameSite=None";
         response.addHeader("Set-Cookie", cookie);
     }
 
@@ -96,7 +96,7 @@ public class JwtUtil {
         return null;
     }
 
-    public boolean validateToken(String token) {
+    public boolean isValidToken(String token) {
         try {
             getClaims(token);
             return !isTokenExpired(token);
@@ -129,4 +129,6 @@ public class JwtUtil {
     public SecretKey getSecretKey(String key) {
         return Keys.hmacShaKeyFor(Base64.getDecoder().decode(key));
     }
+
+
 }

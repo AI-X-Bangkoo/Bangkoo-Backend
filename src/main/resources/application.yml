@@ -6,8 +6,6 @@ spring:
       - "classpath:application-db.yml"
       - "optional:file:.env"  # .env 파일도 로드
 
-
-
 server:
   port: 8080
 
@@ -27,7 +25,7 @@ security:
     client:
       registration:
         kakao:
-          client-id: ${KAKAO_APP_CLIENT_ID:default}  # .env에서 가져옴
+          client-id: ${KAKAO_APP_CLIENT_ID}  # .env에서 가져옴
           client-secret: ${KAKAO_APP_CLIENT_SECRET}  # .env에서 가져옴
           client-authentication-method: client_secret_post
           authorization-grant-type: authorization_code
@@ -41,6 +39,9 @@ security:
           user-name-attribute: id
 
 
+ai:
+  server:
+    url: http://localhost:8000/api
 
   data:
     mongodb:
