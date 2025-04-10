@@ -75,6 +75,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/search").permitAll()
                         .requestMatchers("/api/placement").permitAll()
                         .requestMatchers("/api/3d-url/**").permitAll()
+                        .requestMatchers("/product/**").authenticated()     //인증된 사용자만 가능
                         .requestMatchers(allowUrls).permitAll()
                         .anyRequest().authenticated()
                 )

@@ -15,9 +15,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-/*
-JWT를 쿠키에서 꺼내는 형식
- */
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -30,9 +27,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        String token = extractTokenFromCookie(request);
+        String token = extractToken(request); // 쿠키 + 헤더 모두 허용
 
-        if (token != null && jwtUtil.validateToken(token)) {
+        if (token != null && jwtUtil.isValidToken(token)) {
             String email = jwtUtil.getEmailFromToken(token);
 
             UsernamePasswordAuthenticationToken authentication =
@@ -48,14 +45,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private String extractTokenFromCookie(HttpServletRequest request) {
-        if (request.getCookies() == null) return null;
-
-        for (Cookie cookie : request.getCookies()) {
-            if ("ACCESS_TOKEN".equals(cookie.getName())) {
-                return cookie.getValue();
+    private String extractToken(HttpServletRequest request) {
+        // ✅ 1. 쿠키 우선
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("ACCESS_TOKEN".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
             }
         }
+
+        // ✅ 2. Authorization 헤더 fallback
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+
         return null;
     }
 }
