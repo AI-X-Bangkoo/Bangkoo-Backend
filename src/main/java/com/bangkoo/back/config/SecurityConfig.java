@@ -59,6 +59,7 @@ public class SecurityConfig {
             "/favicon.ico",
             "/api/search",
             "/api/placement",
+            "/api/placement/**",
             "/api/3d-url/**"
     };
 
@@ -74,6 +75,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/search").permitAll()
                         .requestMatchers("/api/placement").permitAll()
+                        .requestMatchers("/api/placement/**").permitAll()
                         .requestMatchers("/api/3d-url/**").permitAll()
                         .requestMatchers("/product/**").authenticated()     //인증된 사용자만 가능
                         .requestMatchers(allowUrls).permitAll()
