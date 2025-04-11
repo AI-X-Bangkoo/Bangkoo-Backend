@@ -1,5 +1,6 @@
 package com.bangkoo.back.controller.placement;
 
+import com.bangkoo.back.dto.placement.PlacementResultResponse;
 import com.bangkoo.back.service.placement.PlacementService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -52,5 +54,17 @@ public class PlacementController {
         // 파일 → S3 업로드 → URL 리턴
         String imageUrl = placementService.uploadAndSaveResult(file, userId);
         return ResponseEntity.ok(Map.of("image_url", imageUrl));
+    }
+
+    /**
+     * 📂 사용자 배치 결과 목록 조회
+     *
+     * @param userId 사용자 ID
+     * @return 사용자가 저장한 이미지 URL, 설명, 생성일 목록
+     */
+    @GetMapping("/placement/results")
+    public ResponseEntity<?> getMyPlacements(@RequestParam String userId) {
+        List<PlacementResultResponse> results = placementService.getResultsByUser(userId);
+        return ResponseEntity.ok(results);
     }
 }
