@@ -26,7 +26,7 @@ public class PlacementService {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("mode", mode);
         body.add("background", convertToResource(background));
-
+        System.out.println(mode);
         if ("add".equals(mode) && reference != null) {
             body.add("reference", convertToResource(reference));
         }
