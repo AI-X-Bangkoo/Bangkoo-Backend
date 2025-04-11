@@ -12,13 +12,17 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+
+import static org.springframework.http.HttpStatus.*;
 
 /**
  * 최초 작성자 : 김태원
@@ -35,15 +39,11 @@ public class PlacementService {
     private final S3Uploader s3Uploader;
     private final PlacementResultRepository placementResultRepository;
 
-    /**
-     * application.yml에 정의된 ai.server.url 값을 주입받음
-     * 예: http://localhost:8000/api
-     */
     @Value("${ai.server.url}")
     private String aiBaseUrl;
 
     /**
-     * AI 서버로 배치 요청 (mode, background, reference 이미지 전송)
+     * 🎨 AI 서버로 배치 요청 (mode, background, reference 전송)
      */
     public String sendToAiServer(String mode, MultipartFile background, MultipartFile reference) throws IOException {
         String aiUrl = aiBaseUrl + "/placement";
@@ -51,6 +51,7 @@ public class PlacementService {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("mode", mode);
         body.add("background", convertToResource(background));
+
         if ("add".equals(mode) && reference != null) {
             body.add("reference", convertToResource(reference));
         }
@@ -59,56 +60,79 @@ public class PlacementService {
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-        ResponseEntity<Map> response = restTemplate.postForEntity(aiUrl, requestEntity, Map.class);
 
-        Map responseBody = response.getBody();
-        if (responseBody == null || !responseBody.containsKey("image_base64")) {
-            throw new RuntimeException("AI 서버 응답이 유효하지 않음.");
+        try {
+            ResponseEntity<Map> response = restTemplate.postForEntity(aiUrl, requestEntity, Map.class);
+            Map responseBody = response.getBody();
+
+            if (responseBody == null || !responseBody.containsKey("image_base64")) {
+                throw new ResponseStatusException(INTERNAL_SERVER_ERROR, "AI 서버 응답이 유효하지 않습니다.");
+            }
+
+            return (String) responseBody.get("image_base64");
+
+        } catch (RestClientException e) {
+            throw new ResponseStatusException(BAD_GATEWAY, "AI 서버 통신에 실패했습니다.", e);
         }
-
-        return (String) responseBody.get("image_base64");
     }
 
     /**
-     * MultipartFile을 ByteArrayResource로 변환
+     * 🔄 MultipartFile → ByteArrayResource 변환
      */
     private Resource convertToResource(MultipartFile file) throws IOException {
-        return new ByteArrayResource(file.getBytes()) {
-            @Override
-            public String getFilename() {
-                return file.getOriginalFilename();
-            }
-        };
+        try {
+            return new ByteArrayResource(file.getBytes()) {
+                @Override
+                public String getFilename() {
+                    return file.getOriginalFilename();
+                }
+            };
+        } catch (IOException e) {
+            throw new ResponseStatusException(INTERNAL_SERVER_ERROR, "파일 리소스 변환에 실패했습니다.", e);
+        }
     }
 
     /**
-     * S3에 업로드하고, placement_results 컬렉션에 저장
+     * 💾 S3 업로드 + Mongo 저장
      */
-    public String uploadAndSaveResult(MultipartFile file, String userId) throws IOException {
-        String imageUrl = s3Uploader.upload(file, "img");
+    public String uploadAndSaveResult(MultipartFile file, String userId, String explanation) throws IOException {
+        try {
+            String imageUrl = s3Uploader.upload(file, "img");
 
-        PlacementResult result = PlacementResult.builder()
-                .userId(userId)
-                .imageUrl(imageUrl)
-                .createdAt(LocalDateTime.now())
-                .build();
+            PlacementResult result = PlacementResult.builder()
+                    .userId(userId)
+                    .imageUrl(imageUrl)
+                    .explanation(explanation)
+                    .createdAt(LocalDateTime.now())
+                    .build();
 
-        placementResultRepository.save(result);
-        return imageUrl;
+            placementResultRepository.save(result);
+            return imageUrl;
+
+        } catch (IOException e) {
+            throw new ResponseStatusException(INTERNAL_SERVER_ERROR, "S3 업로드에 실패했습니다.", e);
+        } catch (Exception e) {
+            throw new ResponseStatusException(INTERNAL_SERVER_ERROR, "결과 저장에 실패했습니다.", e);
+        }
     }
 
     /**
-     * 📂 사용자별 저장된 배치 결과 조회
-     *
-     * @param userId 사용자 ID
-     * @return 이미지 URL + 생성일시 리스트
+     * 📂 사용자 저장 결과 조회
      */
     public List<PlacementResultResponse> getResultsByUser(String userId) {
-        return placementResultRepository.findByUserId(userId).stream()
-                .map(result -> PlacementResultResponse.builder()
-                        .imageUrl(result.getImageUrl())
-                        .createdAt(result.getCreatedAt())
-                        .build())
-                .toList();
+        try {
+            List<PlacementResult> results = placementResultRepository.findByUserId(userId);
+            return results.stream()
+                    .map(result -> PlacementResultResponse.builder()
+                            .imageUrl(result.getImageUrl())
+                            .createdAt(result.getCreatedAt())
+                            .userId(result.getUserId())
+                            .explanation(result.getExplanation()) // explanation 필드 포함 시
+                            .build())
+                    .toList();
+
+        } catch (Exception e) {
+            throw new ResponseStatusException(INTERNAL_SERVER_ERROR, "사용자 결과 조회 중 오류 발생", e);
+        }
     }
 }
