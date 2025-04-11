@@ -97,6 +97,12 @@ public class PlacementService {
         return imageUrl;
     }
 
+    /**
+     * 📂 사용자별 저장된 배치 결과 조회
+     *
+     * @param userId 사용자 ID
+     * @return 이미지 URL + 생성일시 리스트
+     */
     public List<PlacementResultResponse> getResultsByUser(String userId) {
         return placementResultRepository.findByUserId(userId).stream()
                 .map(result -> PlacementResultResponse.builder()
