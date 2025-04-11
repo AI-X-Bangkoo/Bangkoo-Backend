@@ -31,6 +31,9 @@ public class PlacementResult {
     /** 결과 이미지의 S3 URL */
     private String imageUrl;
 
+    /** 결과 이미지에 대한 설명 */
+    private String explanation;
+
     /** 결과 생성 시각 */
     private LocalDateTime createdAt;
 }
