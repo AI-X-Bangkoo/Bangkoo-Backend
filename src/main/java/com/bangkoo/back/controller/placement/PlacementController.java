@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * 최초 작성자: 김태원
@@ -38,5 +39,18 @@ public class PlacementController {
     ) throws IOException {
         String base64 = placementService.sendToAiServer(mode, background, reference);
         return ResponseEntity.ok(base64);
+    }
+
+    /**
+     * 결과 이미지 저장 (S3 업로드 + Mongo 저장)
+     */
+    @PostMapping(value = "/placement/save", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> savePlacementImage(
+            @RequestParam MultipartFile file,
+            @RequestParam String userId
+    ) throws IOException {
+        // 파일 → S3 업로드 → URL 리턴
+        String imageUrl = placementService.uploadAndSaveResult(file, userId);
+        return ResponseEntity.ok(Map.of("image_url", imageUrl));
     }
 }
