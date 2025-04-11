@@ -1,5 +1,6 @@
 package com.bangkoo.back.service.placement;
 
+import com.bangkoo.back.dto.placement.PlacementResultResponse;
 import com.bangkoo.back.model.placement.PlacementResult;
 import com.bangkoo.back.repository.placement.PlacementResultRepository;
 import com.bangkoo.back.utils.S3Uploader;
@@ -16,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -93,5 +95,14 @@ public class PlacementService {
 
         placementResultRepository.save(result);
         return imageUrl;
+    }
+
+    public List<PlacementResultResponse> getResultsByUser(String userId) {
+        return placementResultRepository.findByUserId(userId).stream()
+                .map(result -> PlacementResultResponse.builder()
+                        .imageUrl(result.getImageUrl())
+                        .createdAt(result.getCreatedAt())
+                        .build())
+                .toList();
     }
 }
