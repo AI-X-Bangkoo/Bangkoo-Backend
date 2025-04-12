@@ -2,6 +2,8 @@ package com.bangkoo.back.controller.placement;
 
 import com.bangkoo.back.dto.placement.PlacementResultResponse;
 import com.bangkoo.back.service.placement.PlacementService;
+import com.bangkoo.back.utils.JwtUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +29,7 @@ import static org.springframework.http.HttpStatus.*;
 public class PlacementController {
 
     private final PlacementService placementService;
-
+    private final JwtUtil jwtUtil;
     /**
      * 🎨 사용자 이미지 기반 AI 배치 생성 요청
      */
@@ -62,16 +64,19 @@ public class PlacementController {
     @PostMapping(value = "/placement/save", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> savePlacementImage(
             @RequestParam MultipartFile file,
-            @RequestParam String userId,
-            @RequestParam String explanation
+            @RequestParam String explanation,
+            HttpServletRequest request
     ) throws IOException {
 
         if (file == null || file.isEmpty()) {
             throw new ResponseStatusException(BAD_REQUEST, "파일이 첨부되지 않았습니다.");
         }
 
+        String token = jwtUtil.extractToken(request);
+        String userId = jwtUtil.getUserIdFromToken(token);
+
         if (userId == null || userId.isBlank()) {
-            throw new ResponseStatusException(BAD_REQUEST, "userId는 필수입니다.");
+            throw new ResponseStatusException(UNAUTHORIZED, "로그인이 필요합니다.");
         }
 
         String imageUrl = placementService.uploadAndSaveResult(file, userId, explanation);
@@ -82,9 +87,12 @@ public class PlacementController {
      * 📂 사용자 배치 결과 목록 조회
      */
     @GetMapping("/placement/results")
-    public ResponseEntity<?> getMyPlacements(@RequestParam String userId) {
+    public ResponseEntity<?> getMyPlacements(HttpServletRequest request) {
+        String token = jwtUtil.extractToken(request);
+        String userId = jwtUtil.getUserIdFromToken(token);
+
         if (userId == null || userId.isBlank()) {
-            throw new ResponseStatusException(BAD_REQUEST, "userId는 필수입니다.");
+            throw new ResponseStatusException(UNAUTHORIZED, "로그인이 필요합니다.");
         }
 
         List<PlacementResultResponse> results = placementService.getResultsByUser(userId);
