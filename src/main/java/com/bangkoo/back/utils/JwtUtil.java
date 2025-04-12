@@ -41,9 +41,10 @@ public class JwtUtil {
     }
 
     // ====== JWT 생성 ======
-    public String generateAccessToken(String email, String nickname) {
+    public String generateAccessToken(String id, String email, String nickname) {
         return Jwts.builder()
                 .setSubject(email)
+                .claim("id", id)
                 .claim("nickname", nickname)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtProperties.getAccessTokenExpirationMs()))
@@ -128,6 +129,68 @@ public class JwtUtil {
     // ====== 기타 유틸 ======
     public SecretKey getSecretKey(String key) {
         return Keys.hmacShaKeyFor(Base64.getDecoder().decode(key));
+    }
+
+
+    /**
+     * 🔐 요청에서 JWT 토큰 추출
+     * 작성자: 김태원
+     *
+     * - 우선적으로 HttpOnly 쿠키에서 ACCESS_TOKEN 값을 찾음
+     * - 쿠키가 없다면 Authorization 헤더(Bearer 토큰)에서 추출
+     * - 둘 다 없으면 null 반환
+     *
+     * @param request 클라이언트의 HTTP 요청 객체
+     * @return JWT 토큰 문자열 or null
+     */
+    public String extractToken(HttpServletRequest request) {
+        // ✅ 1. 쿠키에서 ACCESS_TOKEN 찾기
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("accessToken".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+
+        // ✅ 2. Authorization 헤더에서 Bearer 토큰 찾기 (백업 플랜)
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7); // "Bearer " 제거
+        }
+
+        return null; // 둘 다 없으면 null
+    }
+
+    /**
+     * 🔍 JWT 토큰에서 Claims(페이로드) 추출
+     *  작성자: 김태원
+     * - JWT 서명을 검증한 뒤 토큰의 Body(Claims)를 반환
+     * - 내부에 있는 사용자 정보(id, nickname 등)에 접근할 때 사용됨
+     *
+     * @param token 클라이언트로부터 전달된 JWT 액세스 토큰
+     * @return Claims 객체 (key-value 쌍의 Map 구조)
+     */
+    public Claims parseClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(secretKey) // 서명 검증을 위한 SecretKey 설정
+                .build()
+                .parseClaimsJws(token)   // JWT 파싱 및 서명 유효성 검증
+                .getBody();              // 검증된 Claims 반환
+    }
+
+    /**
+     * 🧠 JWT에서 사용자 고유 ID 추출
+     *  작성자: 김태원
+     * - 로그인한 유저의 ID를 JWT의 클레임에서 가져옴
+     * - 클레임 내부의 "id" 키를 기준으로 추출
+     *
+     * @param token 클라이언트의 JWT 액세스 토큰
+     * @return 사용자 ID (String)
+     */
+    public String getUserIdFromToken(String token) {
+        Claims claims = parseClaims(token);
+        return claims.get("id", String.class);
     }
 
 
