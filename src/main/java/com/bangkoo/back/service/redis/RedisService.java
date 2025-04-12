@@ -4,7 +4,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+/**
+ * ✅ RedisService
+ * - 작성자: 김태원
+ * - 작성일: 2025-04-12
+ *
+ * 🧠 Redis를 활용한 사용자별 인테리어 상태 히스토리 저장 로직
+ * - 상태 push/undo/redo 기능 구현
+ * - undo/redo 스택을 Redis 리스트로 관리
+ */
 
 @Service
 @RequiredArgsConstructor
@@ -13,9 +21,9 @@ public class RedisService {
     private final RedisTemplate<String, String> redisTemplate;
 
     /**
-     * ✅ 새로운 상태 push
-     * - undo 스택에 push
-     * - redo 스택은 clear
+     * 📌 상태 저장 (push)
+     * - undo 스택에 새 상태 push
+     * - redo 스택은 초기화
      */
     public void pushState(String userId, String base64) {
         String undoKey = getUndoKey(userId);
@@ -26,30 +34,29 @@ public class RedisService {
     }
 
     /**
-     * 🔙 undo 수행
-     * - undo에서 pop → redo로 push
-     * - 그다음 undo 스택 가장 위에 있는 게 current
+     * 🔙 되돌리기 (undo)
+     * - 현재 상태 pop → redo 스택에 push
+     * - undo 스택의 다음 항목을 current로 반환
      */
     public String undo(String userId) {
         String undoKey = getUndoKey(userId);
         String redoKey = getRedoKey(userId);
 
-        // 최소 하나 이상 있어야 함 (현재 상태를 pop할 거니까)
         Long size = redisTemplate.opsForList().size(undoKey);
         if (size == null || size <= 1) return null;
 
-        // 현재 상태 pop → redo에 push
         String popped = redisTemplate.opsForList().leftPop(undoKey);
         if (popped != null) {
             redisTemplate.opsForList().leftPush(redoKey, popped);
         }
 
-        return redisTemplate.opsForList().index(undoKey, 0); // 현재 상태
+        return redisTemplate.opsForList().index(undoKey, 0);
     }
 
     /**
-     * 🔁 redo 수행
+     * 🔁 다시 실행 (redo)
      * - redo에서 pop → undo에 push
+     * - 새 상태를 current로 반환
      */
     public String redo(String userId) {
         String undoKey = getUndoKey(userId);
@@ -60,11 +67,12 @@ public class RedisService {
             redisTemplate.opsForList().leftPush(undoKey, popped);
         }
 
-        return redisTemplate.opsForList().index(undoKey, 0); // 현재 상태
+        return redisTemplate.opsForList().index(undoKey, 0);
     }
 
     /**
      * 📂 현재 상태 조회
+     * - undo 스택의 top을 반환
      */
     public String getCurrentState(String userId) {
         String undoKey = getUndoKey(userId);
@@ -72,14 +80,14 @@ public class RedisService {
     }
 
     /**
-     * 🧹 전체 초기화
+     * 🧹 사용자 상태 전체 초기화
      */
     public void clearAll(String userId) {
         redisTemplate.delete(getUndoKey(userId));
         redisTemplate.delete(getRedoKey(userId));
     }
 
-    // 👉 키 조합 도우미
+    // 🔑 키 생성 도우미
     private String getUndoKey(String userId) {
         return "undo:" + userId;
     }
