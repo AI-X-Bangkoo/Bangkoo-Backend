@@ -41,11 +41,12 @@ public class JwtUtil {
     }
 
     // ====== JWT 생성 ======
-    public String generateAccessToken(String id, String email, String nickname) {
+    public String generateAccessToken(String id, String email, String nickname, String role) {
         return Jwts.builder()
                 .setSubject(email)
                 .claim("id", id)
                 .claim("nickname", nickname)
+                .claim("role", role)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtProperties.getAccessTokenExpirationMs()))
                 .signWith(secretKey, SignatureAlgorithm.HS256)
@@ -191,6 +192,26 @@ public class JwtUtil {
     public String getUserIdFromToken(String token) {
         Claims claims = parseClaims(token);
         return claims.get("id", String.class);
+    }
+
+    /**
+     * use인지 admin인지
+     */
+    public String getJwtFromRequest(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("accessToken".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
+    }
+
+    public String getUserRoleFromToken(String token) {
+        Claims claims = getClaims(token);
+        return claims.get("role", String.class);
     }
 
 

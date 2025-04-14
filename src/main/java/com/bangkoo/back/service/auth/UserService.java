@@ -17,13 +17,15 @@ public class UserService {
      */
     private final UserRepository userRepository;
 
-    public User findOrCreate(String email, String nickname) {
+    public User findOrCreate(String email, String nickname,
+                             String role) {
         Optional<User> userOptional  = userRepository.findByEmail(email);
 
         return userOptional .orElseGet(() ->{
             User newUser = User.builder()
                     .email(email)
                     .nickname(nickname)
+                    .role(role)
                     .build();
             return userRepository.save(newUser);
         });

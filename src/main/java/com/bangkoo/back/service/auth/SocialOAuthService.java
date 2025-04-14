@@ -2,7 +2,7 @@ package com.bangkoo.back.service.auth;
 
 import com.bangkoo.back.config.properites.JwtProperties;
 import com.bangkoo.back.config.properites.SocialOAuthProperties;
-import com.bangkoo.back.DTO.TokenResponseDTO;
+import com.bangkoo.back.dto.TokenResponseDTO;
 import com.bangkoo.back.model.auth.User;
 import com.bangkoo.back.repository.auth.UserRepository;
 import com.bangkoo.back.utils.JwtUtil;
@@ -21,11 +21,6 @@ import java.util.Optional;
 @Slf4j
 @Service
 public class SocialOAuthService {
-
-    /**
-     * 카카오 OAuth인증을 통해 사용자의 정보를 가져오고,
-     * JWT토큰을 발급하여 클라이언트에게 응답하는 기능
-     */
 
     private static final String TOKEN_URI = "https://kauth.kakao.com/oauth/token";
     private static final String USER_INFO_URI = "https://kapi.kakao.com/v2/user/me";
@@ -66,7 +61,6 @@ public class SocialOAuthService {
         this.accessTokenExpiration = jwtProps.getAccessTokenExpirationMs().intValue();
     }
 
-    // 메서드 시그니처 수정
     public TokenResponseDTO kakaoLogin(String code) throws Exception {
         log.info("카카오에서 받아오는 authorization code: {}", code);
 
@@ -80,12 +74,29 @@ public class SocialOAuthService {
             throw new Exception("Cannot retrieve email from Kakao account");
         }
 
+        // 사용자 정보 확인 후 존재하지 않으면 새로 생성
         User user = userRepository.findByEmail(email).orElseGet(() -> {
-            User newUser = User.builder().email(email).nickname(nickname).build();
+
+            User newUser = User.builder()
+                    .email(email)
+                    .nickname(nickname)
+                    .role("user")  // 기본적으로 'user' 역할 할당
+                    .build();
             return userRepository.save(newUser);
         });
 
-        String accessToken = jwtUtil.generateAccessToken(user.getId(), user.getEmail(), user.getNickname());
+        // role이 null인 경우 기본값 설정
+        if (user.getRole() == null || user.getRole().isEmpty()) {
+            user.setRole("user");
+            user = userRepository.save(user);
+        }
+
+        // 로그를 찍어서 role 값 확인
+        log.info("User email: {}, Role: {}", user.getEmail(), user.getRole());
+
+
+// JWT 토큰 생성
+        String accessToken = jwtUtil.generateAccessToken(user.getId(), user.getEmail(), user.getNickname(), user.getRole());
         String refreshToken = jwtUtil.generateRefreshToken(user.getEmail());
 
         log.info("✅ Generated accessToken: {}", accessToken);
@@ -95,11 +106,10 @@ public class SocialOAuthService {
                 .refreshToken(refreshToken)
                 .email(user.getEmail())
                 .nickname(user.getNickname())
+                .role(user.getRole())  // 사용자 권한 포함
                 .login(true)
                 .build();
     }
-
-
 
     private String getAccessToken(String code) throws Exception {
         HttpHeaders headers = new HttpHeaders();

@@ -1,6 +1,6 @@
 package com.bangkoo.back.controller.auth;
 
-import com.bangkoo.back.DTO.TokenResponseDTO;
+import com.bangkoo.back.dto.TokenResponseDTO;
 import com.bangkoo.back.service.auth.SocialOAuthService;
 import com.bangkoo.back.utils.JwtUtil;
 import jakarta.servlet.http.HttpServletResponse;
@@ -74,9 +74,19 @@ public class AuthController {
                     .sameSite("Lax")
                     .build();
 
+            // role도 함께 쿠키로 저장 (optional)
+            String encodedRole = URLEncoder.encode(tokenDto.getRole(), StandardCharsets.UTF_8);
+            ResponseCookie roleCookie = ResponseCookie.from("role", encodedRole)
+                    .httpOnly(false)
+                    .secure(true)
+                    .path("/")
+                    .maxAge(60 * 60)
+                    .sameSite("Lax")
+                    .build();
 
             response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
             response.addHeader(HttpHeaders.SET_COOKIE, nicknameCookie.toString());
+            response.addHeader(HttpHeaders.SET_COOKIE, roleCookie.toString());
 
             // 응답 DTO에서 accessToken 제거 후 반환
             tokenDto.setAccessToken(null);
@@ -111,8 +121,16 @@ public class AuthController {
                 .sameSite("Lax")
                 .build();
 
+        ResponseCookie deleteRole = ResponseCookie.from("role", "")
+                .httpOnly(false)
+                .secure(false)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Lax")
+                .build();
         response.addHeader(HttpHeaders.SET_COOKIE, deleteAccessToken.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, deleteNickname.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, deleteRole.toString());
 
         return ResponseEntity.ok(Map.of("message", "로그아웃 완료"));
     }

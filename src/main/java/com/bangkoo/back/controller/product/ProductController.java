@@ -1,7 +1,7 @@
 package com.bangkoo.back.controller.product;
 
-import com.bangkoo.back.DTO.product.ProductsRequestDTO;
-import com.bangkoo.back.DTO.product.ProductsResponseDTO;
+import com.bangkoo.back.dto.product.ProductsRequestDTO;
+import com.bangkoo.back.dto.product.ProductsResponseDTO;
 import com.bangkoo.back.mapper.ProductDtoMapper;
 import com.bangkoo.back.model.product.Product;
 import com.bangkoo.back.service.product.ProductService;
