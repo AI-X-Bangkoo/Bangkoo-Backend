@@ -77,6 +77,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/3d-url/**").permitAll()
                         .requestMatchers("/product/**").authenticated()     //인증된 사용자만 가능
                         .requestMatchers(allowUrls).permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")      //관리자만 접근 가능
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtUtil),

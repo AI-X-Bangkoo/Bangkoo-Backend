@@ -1,4 +1,4 @@
-package com.bangkoo.back.DTO;
+package com.bangkoo.back.DTO.jwt;
 
 
 import lombok.*;

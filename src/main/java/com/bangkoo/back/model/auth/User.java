@@ -20,4 +20,9 @@ public class User {
 
     private String email;
     private String nickname;
+    private String role;        //user 또는 admin
+
+    public boolean isAdmin(){
+      return "admin".equalsIgnoreCase(this.role);
+    };
 }

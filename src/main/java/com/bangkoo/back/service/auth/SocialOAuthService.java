@@ -2,7 +2,7 @@ package com.bangkoo.back.service.auth;
 
 import com.bangkoo.back.config.properites.JwtProperties;
 import com.bangkoo.back.config.properites.SocialOAuthProperties;
-import com.bangkoo.back.DTO.TokenResponseDTO;
+import com.bangkoo.back.DTO.jwt.TokenResponseDTO;
 import com.bangkoo.back.model.auth.User;
 import com.bangkoo.back.repository.auth.UserRepository;
 import com.bangkoo.back.utils.JwtUtil;

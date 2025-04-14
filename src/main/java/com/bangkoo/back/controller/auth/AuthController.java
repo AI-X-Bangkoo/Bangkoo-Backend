@@ -1,6 +1,7 @@
 package com.bangkoo.back.controller.auth;
 
-import com.bangkoo.back.DTO.TokenResponseDTO;
+import com.bangkoo.back.DTO.jwt.TokenResponseDTO;
+import com.bangkoo.back.model.auth.User;
 import com.bangkoo.back.service.auth.SocialOAuthService;
 import com.bangkoo.back.utils.JwtUtil;
 import jakarta.servlet.http.HttpServletResponse;
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URLEncoder;
@@ -116,6 +118,5 @@ public class AuthController {
 
         return ResponseEntity.ok(Map.of("message", "로그아웃 완료"));
     }
-
 
 }
