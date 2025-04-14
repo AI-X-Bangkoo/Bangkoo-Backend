@@ -3,7 +3,6 @@ spring:
     active: dev
   config:
     import:
-      - "classpath:application-db.yml"
       - "optional:file:.env"  # .env 파일도 로드
 
 server:
@@ -50,5 +49,5 @@ ai:
 
   data:
     mongodb:
-      uri: mongodb+srv://bangkoo:bangkoo@bangkoo.3bjilqn.mongodb.net/bangkoo?retryWrites=true&w=majority&appName=bangkoo
+      uri: mongodb://localhost:27017/testbangkoo
 
