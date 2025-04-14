@@ -1,13 +1,15 @@
 package com.bangkoo.back.service.product;
 
+import com.bangkoo.back.dto.product.ProductsResponseDTO;
 import com.bangkoo.back.model.product.Product;
 import com.bangkoo.back.repository.product.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.data.domain.Pageable;
+
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,7 +22,8 @@ import java.util.Optional;
  */
 public class ProductService {
 
-    private final ProductRepository productRepository;
+    @Autowired
+    private ProductRepository productRepository;
 
     /**
      * 새로운 제품을 저장합니다. 저장 시 생성일(createdAt)을 현재 시간으로 설정합니다.
@@ -93,6 +96,21 @@ public class ProductService {
     public Product findById(String id){
         return productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("제품을 찾지 못 했습니다."));
+    }
+
+    /**
+     * 모든 제품을 가져와서
+     * DTO로 변환해서 리스트로 만들기
+     */
+    public List<ProductsResponseDTO> getAllProducts() {
+        List<Product> products = productRepository.findAll();
+        return products.stream().map(product -> {
+            ProductsResponseDTO dto = new ProductsResponseDTO();
+            dto.setId(product.getId());
+            dto.setName(product.getName());
+            dto.setCreatedAt(product.getCreatedAt());
+            return dto;
+        }).toList();
     }
 
 }

@@ -1,4 +1,4 @@
-package com.bangkoo.back.DTO.product;
+package com.bangkoo.back.dto.product;
 
 import lombok.Data;
 

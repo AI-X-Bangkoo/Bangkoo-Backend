@@ -1,24 +1,51 @@
 package com.bangkoo.back.controller.admin;
 
-import com.bangkoo.back.model.auth.User;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+
+import com.bangkoo.back.dto.product.ProductsResponseDTO;
+import com.bangkoo.back.repository.product.ProductRepository;
+import com.bangkoo.back.service.product.ProductService;
+import com.bangkoo.back.utils.JwtUtil;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
-@RequestMapping("/admin")
+@RequestMapping("/api/admin/products")
 public class AdminController {
 
+    private final ProductService productService;
+    private final ProductRepository productRepository;
+    private final JwtUtil jwtUtil;
+
+
+    public AdminController(ProductService productService, ProductRepository productRepository, JwtUtil jwtUtil) {
+        this.productService = productService;
+        this.productRepository = productRepository;
+        this.jwtUtil = jwtUtil;
+    }
+
+
+
     /**
-     * 관리자페이지로 이동
+     * user인지 admin인지'확인
+     * @param request
+     * @return
      */
-    @RequestMapping("/adminBoard")
-    public ResponseEntity<?> adminBoard(@AuthenticationPrincipal User user){
-        if(!"admin".equalsIgnoreCase(user.getRole())){
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("접근 권한이 없습니다.");
+    @GetMapping
+    public List<ProductsResponseDTO> findAllProducts(HttpServletRequest request) {
+        String token = jwtUtil.getJwtFromRequest(request);
+        if (token == null || !jwtUtil.isValidToken(token)) {
+            throw new RuntimeException("유효하지 않은 토큰입니다.");
         }
-        return ResponseEntity.ok("관리자 대시보드입니다.");
+
+        String role = jwtUtil.getUserRoleFromToken(token);
+        if (!"ADMIN".equals(role)) {
+            throw new RuntimeException("관리자만 접근할 수 있습니다.");
+        }
+
+        return productService.getAllProducts();
     }
 }

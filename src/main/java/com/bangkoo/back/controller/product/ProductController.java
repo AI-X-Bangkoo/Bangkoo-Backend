@@ -1,7 +1,7 @@
 package com.bangkoo.back.controller.product;
 
-import com.bangkoo.back.DTO.product.ProductsRequestDTO;
-import com.bangkoo.back.DTO.product.ProductsResponseDTO;
+import com.bangkoo.back.dto.product.ProductsRequestDTO;
+import com.bangkoo.back.dto.product.ProductsResponseDTO;
 import com.bangkoo.back.mapper.ProductDtoMapper;
 import com.bangkoo.back.model.product.Product;
 import com.bangkoo.back.service.product.ProductService;
@@ -16,7 +16,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 
 @RestController
-@RequestMapping("/product")
 @RequiredArgsConstructor
 /**
  * 제품의 추가, 수정, 삭제, 조회, 임시 저장 등
@@ -29,45 +28,52 @@ public class ProductController {
     private final ProductDtoMapper dtoMapper;
 
     /**
+     * JWT 토큰을 헤더에서 추출하고 유효성을 검증하여 이메일을 반환하는 메서드
+     */
+    private String extractEmailFromRequest(HttpServletRequest request) {
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+            if (jwtUtil.isValidToken(token)) {
+                return jwtUtil.getEmailFromToken(token);
+            }
+        }
+        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or expired token");
+    }
+
+    /**
      * 일반 제품 저장 API
      * POST /product/save
-     * @param product 저장할 제품 정보
+     * @param requestDTO 저장할 제품 정보
      * @return 저장된 제품
      */
-    @PostMapping("/save")
+
+    @PostMapping("/product/save")
     public ProductsResponseDTO saveProduct(@RequestBody ProductsRequestDTO requestDTO, HttpServletRequest request) {
+        // JWT 토큰에서 이메일 추출
+        String username = extractEmailFromRequest(request);
 
-        //JWT 토큰을 헤더에서 추출
-        String token = request.getHeader("Authorization");
-        if(token != null && token.startsWith("Bearer ")) {
-            token = token.substring(7);         //"bearer" 부분을 제거한 토큰만 추출
-        }
-
-        if (token != null && jwtUtil.isValidToken(token)) {
-            // JWT가 유효하다면 사용자 정보 추출
-            String username = jwtUtil.getEmailFromToken(token);
-            // 사용자 이름 또는 다른 정보로 비즈니스 로직을 처리 (예: 제품 소유자 정보 추가)
-        } else {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"Invalid or expired token");
-        }
-
+        // ProductsRequestDTO -> Product 엔티티로 변환
         Product product = dtoMapper.toEntity(requestDTO);
+        // 저장 시 사용자 이메일이나 추가 정보를 사용할 수 있음
+        // product.setOwnerEmail(username); 예시로 이메일 저장 가능
+
         Product saved = productService.save(product);
         return dtoMapper.toResponseDTO(saved);
     }
-
-
 
     /**
      * 제품 수정 API
      * PUT /product/{id}
      * @param id 수정할 제품 ID
-     * @param product 수정할 내용이 담긴 제품 객체
+     * @param requestDTO 수정할 내용이 담긴 제품 DTO
      * @return 수정된 제품
      */
-    @PutMapping("/{id}")
-    public Product updateProduct(@PathVariable String id, @RequestBody Product product) {
-        return productService.update(id, product);
+    @PutMapping("/product/{id}")
+    public ProductsResponseDTO updateProduct(@PathVariable String id, @RequestBody ProductsRequestDTO requestDTO) {
+        Product product = dtoMapper.toEntity(requestDTO);
+        Product updated = productService.update(id, product);
+        return dtoMapper.toResponseDTO(updated);
     }
 
     /**
@@ -75,7 +81,7 @@ public class ProductController {
      * DELETE /product/{id}
      * @param id 삭제할 제품 ID
      */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/product/{id}")
     public void deleteProduct(@PathVariable String id) {
         productService.delete(id);
     }
@@ -83,24 +89,27 @@ public class ProductController {
     /**
      * 전체 제품 조회 API
      * GET /product
-     * @return 모든 제품 리스트
+     * @param page 페이지 번호
+     * @param size 페이지 당 개수
+     * @return 제품 목록
      */
-    @GetMapping
+    @GetMapping("/product")
     public List<ProductsResponseDTO> getAllProducts(@RequestParam(defaultValue = "0") int page,
                                                     @RequestParam(defaultValue = "10") int size) {
         Page<Product> productPage = productService.findAll(page, size);
         return productPage.map(dtoMapper::toResponseDTO).getContent(); // 페이징된 DTO 반환
     }
+
     /**
      * 단일 제품 조회 API
      * GET /product/{id}
      * @param id 조회할 제품 ID
-     * @return 해당 제품 객체
+     * @return 해당 제품 DTO
      */
-    @GetMapping("/{id}")
-    public Product getProduct(@PathVariable String id){
-        return productService.findById(id);
+    @GetMapping("/product/{id}")
+    public ProductsResponseDTO getProduct(@PathVariable String id) {
+        Product product = productService.findById(id);
+        return dtoMapper.toResponseDTO(product);
     }
-
-
 }
+
