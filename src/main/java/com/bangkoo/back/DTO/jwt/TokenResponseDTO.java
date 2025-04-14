@@ -30,7 +30,7 @@ public class TokenResponseDTO {
                 ", refreshToken='" + refreshToken + '\'' +
                 ", email='" + email + '\'' +
                 ", nickname='" + nickname + '\'' +
-                ", login=" + login +
+                ", login=" + login + '\'' +
                 '}';
     }
 }

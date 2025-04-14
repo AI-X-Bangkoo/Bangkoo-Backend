@@ -85,7 +85,7 @@ public class SocialOAuthService {
             return userRepository.save(newUser);
         });
 
-        String accessToken = jwtUtil.generateAccessToken(user.getEmail(), user.getNickname());
+        String accessToken = jwtUtil.generateAccessToken(user.getId(), user.getEmail(), user.getNickname());
         String refreshToken = jwtUtil.generateRefreshToken(user.getEmail());
 
         log.info("✅ Generated accessToken: {}", accessToken);

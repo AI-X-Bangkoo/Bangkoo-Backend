@@ -9,7 +9,7 @@ services:
     environment:
       MONGO_INITDB_DATABASE: bangkoo
       MONGO_INITDB_ROOT_USERNAME: bangkoo
-      MONGO_INITDB_ROOT_PASSWORD: bangkoo\
+      MONGO_INITDB_ROOT_PASSWORD: bangkoo
     volumes:
       - mongo-data:/data/db
 

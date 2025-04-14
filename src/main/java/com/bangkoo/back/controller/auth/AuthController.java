@@ -31,7 +31,7 @@ public class AuthController {
     private final JwtUtil jwtUtil;
 
 //    @Value("${kakao.client-id}")
-    @Value("${security.oauth2.client.registration.kakao.client-id}")
+    @Value("${kakao.client-id}")
     private String kakaoClientId;
 
     @Value("${kakao.redirect-uri}")
@@ -41,11 +41,14 @@ public class AuthController {
     @GetMapping("/kakao/login")
     public ResponseEntity<?> kakaoLogin() {
 
+        System.out.println("======= /kakao/login 진입 =======");
+
         String kakaoAuthUrl = "https://kauth.kakao.com/oauth/authorize?" +
                 "client_id=" + kakaoClientId +
                 "&redirect_uri=" + kakaoRedirectUri +
                 "&response_type=code";
 
+        System.out.println("======= /kakao/login kakaoAuthUrl: " + kakaoAuthUrl);
         return ResponseEntity.ok(Map.of("url", kakaoAuthUrl));
     }
 
@@ -53,6 +56,7 @@ public class AuthController {
     @PostMapping("/callback/kakao")
     public ResponseEntity<?> callback(@RequestParam("code") String code,
                                       HttpServletResponse response) {
+        
         try {
             System.out.println("code = " + code);
             TokenResponseDTO tokenDto = socialOAuthService.kakaoLogin(code);
@@ -84,6 +88,7 @@ public class AuthController {
             tokenDto.setAccessToken(null);
             tokenDto.setLogin(true);
 
+            System.out.println("tokenDto: " + tokenDto);
             return ResponseEntity.ok(tokenDto);
 
         } catch (Exception e) {
