@@ -10,6 +10,8 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 최초 작성자: 김동규
@@ -65,5 +67,15 @@ public class SearchService {
         HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(body, headers);
         String fastapiUrl = aiServerUrl + "/search";
         return restTemplate.postForObject(fastapiUrl, request, String.class);
+    }
+
+    public List<String> getRecentSearches() {
+        String url = aiServerUrl + "/api/recent-searches";
+        return restTemplate.getForObject(url, List.class);
+    }
+
+    public List<Map<String, Object>> getPopularSearches() {
+        String url = aiServerUrl + "/api/popular-searches";
+        return restTemplate.getForObject(url, List.class);
     }
 }

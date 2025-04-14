@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 최초 작성자: 김동규
@@ -45,5 +47,15 @@ public class SearchController {
     ) throws IOException {
         String result = searchService.recommendOrSearch(image, query, minPrice, maxPrice, keyword, style,image_url);
         return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/recent-searches")
+    public ResponseEntity<List<String>> getRecentSearches() {
+        return ResponseEntity.ok(searchService.getRecentSearches());
+    }
+
+    @GetMapping("/popular-searches")
+    public ResponseEntity<List<Map<String, Object>>> getPopularSearches() {
+        return ResponseEntity.ok(searchService.getPopularSearches());
     }
 }
