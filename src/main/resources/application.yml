@@ -20,6 +20,11 @@ jwt:
   access-token-expiration-ms: 1800000 # 30분
   refresh-token-expiration-ms: 604800000 # 7일
 
+kakao:
+  client-id: ${KAKAO_APP_CLIENT_ID}
+  client-secret: ${KAKAO_APP_CLIENT_SECRET}
+  redirect-uri: ${KAKAO_REDIRECT_URL}
+
 security:
   oauth2:
     client:
