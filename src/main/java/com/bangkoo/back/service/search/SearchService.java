@@ -69,11 +69,21 @@ public class SearchService {
         return restTemplate.postForObject(fastapiUrl, request, String.class);
     }
 
+    /**
+     * 최근 검색어 목록을 AI 서버로부터 조회
+     *
+     * @return 최근 검색어 리스트 (최대 10개)
+     */
     public List<String> getRecentSearches() {
         String url = aiServerUrl + "/api/recent-searches";
         return restTemplate.getForObject(url, List.class);
     }
 
+    /**
+     * 인기 검색어 목록을 AI 서버로부터 조회
+     *
+     * @return 검색 횟수 기준으로 정렬된 인기 검색어 리스트
+     */
     public List<Map<String, Object>> getPopularSearches() {
         String url = aiServerUrl + "/api/popular-searches";
         return restTemplate.getForObject(url, List.class);

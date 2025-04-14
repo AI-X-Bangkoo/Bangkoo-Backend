@@ -49,11 +49,21 @@ public class SearchController {
         return ResponseEntity.ok(result);
     }
 
+    /**
+     * 최근 검색어 목록 조회
+     *
+     * @return 최근 검색어 리스트 (최대 10개)
+     */
     @GetMapping("/recent-searches")
     public ResponseEntity<List<String>> getRecentSearches() {
         return ResponseEntity.ok(searchService.getRecentSearches());
     }
 
+    /**
+     * 인기 검색어 목록 조회
+     *
+     * @return 검색 횟수 기준으로 정렬된 인기 검색어 리스트
+     */
     @GetMapping("/popular-searches")
     public ResponseEntity<List<Map<String, Object>>> getPopularSearches() {
         return ResponseEntity.ok(searchService.getPopularSearches());
