@@ -50,14 +50,16 @@ public class SearchController {
     }
 
     /**
-     * 최근 검색어 목록 조회
+     * 사용자별 최근 검색어 조회
      *
-     * @return 최근 검색어 리스트 (최대 10개)
+     * @param userId 사용자 ID
+     * @return 최근 검색어 리스트
      */
     @GetMapping("/recent-searches")
-    public ResponseEntity<List<String>> getRecentSearches() {
-        return ResponseEntity.ok(searchService.getRecentSearches());
+    public ResponseEntity<List<String>> getRecentSearches(@RequestParam String userId) {
+        return ResponseEntity.ok(searchService.getRecentSearches(userId));
     }
+
 
     /**
      * 인기 검색어 목록 조회
