@@ -1,6 +1,7 @@
 package com.bangkoo.back.service.search;
 
 import com.bangkoo.back.utils.MultipartInputStreamFileResource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,9 @@ public class SearchService {
 
     private final RestTemplate restTemplate;
 
+    @Autowired
+    private SearchLogService searchLogService;
+
     @Value("${ai.server.url}")
     private String aiServerUrl;
 
@@ -42,8 +46,14 @@ public class SearchService {
             Integer maxPrice,
             String keyword,
             String style,
-            String image_url
+            String image_url,
+            String userId
     ) throws IOException {
+
+        if (userId != null && !userId.equals("anonymous") && query != null && !query.isEmpty()) {
+            searchLogService.saveSearchLog(query, userId, image != null ? "image+text" : "text");
+        }
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
@@ -58,6 +68,10 @@ public class SearchService {
             body.add("image_url", image_url);
         }
 
+        if (userId != null && !userId.isEmpty()) {
+            body.add("user_id", userId);
+        }
+
         if (minPrice != null) body.add("min_price", minPrice);
         if (maxPrice != null) body.add("max_price", maxPrice);
         if (image_url != null) body.add("image_url", image_url);
@@ -67,25 +81,5 @@ public class SearchService {
         HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(body, headers);
         String fastapiUrl = aiServerUrl + "/search";
         return restTemplate.postForObject(fastapiUrl, request, String.class);
-    }
-
-    /**
-     * 최근 검색어 목록을 AI 서버로부터 조회
-     *
-     * @return 최근 검색어 리스트 (최대 10개)
-     */
-    public List<String> getRecentSearches(String userId) {
-        String url = aiServerUrl + "/api/recent-searches?user_id=" + userId;
-        return restTemplate.getForObject(url, List.class);
-    }
-
-    /**
-     * 인기 검색어 목록을 AI 서버로부터 조회
-     *
-     * @return 검색 횟수 기준으로 정렬된 인기 검색어 리스트
-     */
-    public List<Map<String, Object>> getPopularSearches() {
-        String url = aiServerUrl + "/api/popular-searches";
-        return restTemplate.getForObject(url, List.class);
     }
 }
