@@ -34,8 +34,7 @@ import java.util.Arrays;
 public class SecurityConfig {
 
     private final JwtUtil jwtUtil;
-
-
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     /**
      *
@@ -61,7 +60,9 @@ public class SecurityConfig {
             "/api/placement",
             "/api/placement/**",
             "/api/3d-url/**",
-            "/api/products/dummy"
+            "/api/products/dummy",
+
+
     };
 
 
@@ -79,14 +80,14 @@ public class SecurityConfig {
                         .requestMatchers("/api/placement").permitAll()
                         .requestMatchers("/api/placement/**").permitAll()
                         .requestMatchers("/api/3d-url/**").permitAll()
-                        .requestMatchers("/api/redis/**").permitAll()
-                        .requestMatchers("/api/product/**").authenticated()     //인증된 사용자만 가능
+                        .requestMatchers("/api/redis/**").permitAll()//인증된 사용자만 가능
+                        .requestMatchers("/auth/**", "/oauth/**").permitAll() // 인증 제외 경로
+                        .requestMatchers("/api/admin/products").hasRole("ADMIN")
                         .requestMatchers(allowUrls).permitAll()
-                        .requestMatchers("/admin/**").hasRole("ADMIN")      //관리자만 접근 가능
+                      //관리자만 접근 가능
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil),
-                        UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // ✅ 수정됨
 
         return http.build();
     }
@@ -126,4 +127,7 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
+
+
 }

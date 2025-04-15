@@ -9,15 +9,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.Date;
+import java.util.*;
 
 @Component
 public class JwtUtil {
@@ -123,9 +122,16 @@ public class JwtUtil {
                 .getBody();
     }
 
+    /**
+     * 토큰의 유효성 검증
+     * @param token
+     * @return
+     */
     public Authentication getAuthentication(String token) {
-        String email = getEmailFromToken(token);
-        return new UsernamePasswordAuthenticationToken(email, "", Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")));
+        Claims claims = parseClaims(token);
+        String role = claims.get("role", String.class); // 역할을 가져옴
+        List<GrantedAuthority> authorities = Arrays.asList(new SimpleGrantedAuthority(role));
+        return new UsernamePasswordAuthenticationToken(claims.getSubject(), null, authorities);
     }
     // ====== 기타 유틸 ======
     public SecretKey getSecretKey(String key) {
