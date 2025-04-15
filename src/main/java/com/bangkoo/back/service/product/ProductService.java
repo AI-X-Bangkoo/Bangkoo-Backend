@@ -4,6 +4,7 @@ import com.bangkoo.back.dto.product.ProductsResponseDTO;
 import com.bangkoo.back.model.product.Product;
 import com.bangkoo.back.repository.product.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -21,7 +22,8 @@ import java.util.Optional;
  */
 public class ProductService {
 
-    private final ProductRepository productRepository;
+    @Autowired
+    private ProductRepository productRepository;
 
     /**
      * 새로운 제품을 저장합니다. 저장 시 생성일(createdAt)을 현재 시간으로 설정합니다.

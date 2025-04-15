@@ -27,7 +27,13 @@ public class AdminController {
         this.jwtUtil = jwtUtil;
     }
 
-    // 관리자 인증 후 전체 상품 조회
+
+
+    /**
+     * user인지 admin인지'확인
+     * @param request
+     * @return
+     */
     @GetMapping("/products")
     public List<ProductsResponseDTO> findAllProducts(HttpServletRequest request) {
         String token = jwtUtil.getJwtFromRequest(request);

@@ -60,7 +60,8 @@ public class SecurityConfig {
             "/api/search",
             "/api/placement",
             "/api/placement/**",
-            "/api/3d-url/**"
+            "/api/3d-url/**",
+            "/api/products/dummy"
     };
 
 
@@ -73,12 +74,15 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/search").permitAll()
+                        .requestMatchers("/api/search/**").permitAll()
+                        .requestMatchers("/api/**").permitAll()
                         .requestMatchers("/api/placement").permitAll()
                         .requestMatchers("/api/placement/**").permitAll()
                         .requestMatchers("/api/3d-url/**").permitAll()
-                        .requestMatchers("/product/**").authenticated()     //인증된 사용자만 가능
+                        .requestMatchers("/api/redis/**").permitAll()
+                        .requestMatchers("/api/product/**").authenticated()     //인증된 사용자만 가능
                         .requestMatchers(allowUrls).permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")      //관리자만 접근 가능
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtUtil),
@@ -96,7 +100,6 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
-        configuration.setAllowedHeaders(Arrays.asList("Content-Type"));
         configuration.setAllowCredentials(true); // HttpOnly 쿠키 사용 시 필요
         configuration.setMaxAge(3600L);
 

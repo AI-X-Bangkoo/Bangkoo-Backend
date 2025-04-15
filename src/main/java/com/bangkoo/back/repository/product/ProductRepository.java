@@ -19,4 +19,6 @@ public interface ProductRepository extends MongoRepository<Product,String> {
 
     //제품 ID로 조회
     Optional<Product> findById(String id);
+
+    
 }

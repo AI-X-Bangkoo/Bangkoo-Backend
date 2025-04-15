@@ -1,4 +1,4 @@
-package com.bangkoo.back.dto;
+package com.bangkoo.back.dto.jwt;
 
 import lombok.*;
 
@@ -37,6 +37,7 @@ public class TokenResponseDTO {
                 ", refreshToken='" + refreshToken + '\'' +
                 ", email='" + email + '\'' +
                 ", nickname='" + nickname + '\'' +
+
                 ", role='" + role + '\'' +
                 ", login=" + login +
                 '}';
