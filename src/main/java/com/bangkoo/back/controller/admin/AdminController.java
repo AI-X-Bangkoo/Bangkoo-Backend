@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/admin/products")
+@RequestMapping("/api")
 public class AdminController {
 
     private final ProductService productService;
@@ -27,17 +27,8 @@ public class AdminController {
         this.jwtUtil = jwtUtil;
     }
 
-    @GetMapping
-    public List<ProductsResponseDTO> findAllProducts() {
-        return productService.getAllProducts();
-    }
-
-    /**
-     * user인지 admin인지'확인
-     * @param request
-     * @return
-     */
-    @GetMapping
+    // 관리자 인증 후 전체 상품 조회
+    @GetMapping("/products")
     public List<ProductsResponseDTO> findAllProducts(HttpServletRequest request) {
         String token = jwtUtil.getJwtFromRequest(request);
         if (token == null || !jwtUtil.isValidToken(token)) {

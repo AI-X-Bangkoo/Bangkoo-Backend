@@ -38,7 +38,7 @@ public class SocialOAuthService {
 
     public SocialOAuthService(
             SocialOAuthProperties oAuthProps,
-            @Qualifier("jwtProperties") JwtProperties jwtProps,
+            JwtProperties jwtProps,
             JwtUtil jwtUtil,
             UserRepository userRepository
     ) {
