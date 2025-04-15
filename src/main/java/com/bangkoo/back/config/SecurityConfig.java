@@ -60,7 +60,8 @@ public class SecurityConfig {
             "/api/search",
             "/api/placement",
             "/api/placement/**",
-            "/api/3d-url/**"
+            "/api/3d-url/**",
+            "/api/detect_all_base64"
     };
 
 
@@ -79,6 +80,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/placement/**").permitAll()
                         .requestMatchers("/api/3d-url/**").permitAll()
                         .requestMatchers("/api/redis/**").permitAll()
+                        .requestMatchers("/api/detect_all_base64").permitAll()
                         .requestMatchers("/product/**").authenticated()     //인증된 사용자만 가능
                         .requestMatchers(allowUrls).permitAll()
                         .anyRequest().authenticated()
