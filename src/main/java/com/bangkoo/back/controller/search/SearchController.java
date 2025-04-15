@@ -43,31 +43,10 @@ public class SearchController {
             @RequestParam(required = false) Integer minPrice,
             @RequestParam(required = false) Integer maxPrice,
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String style
+            @RequestParam(required = false) String style,
+            @RequestParam(required = false) String userId
     ) throws IOException {
-        String result = searchService.recommendOrSearch(image, query, minPrice, maxPrice, keyword, style,image_url);
+        String result = searchService.recommendOrSearch(image, query, minPrice, maxPrice, keyword, style,image_url, userId);
         return ResponseEntity.ok(result);
-    }
-
-    /**
-     * 사용자별 최근 검색어 조회
-     *
-     * @param userId 사용자 ID
-     * @return 최근 검색어 리스트
-     */
-    @GetMapping("/recent-searches")
-    public ResponseEntity<List<String>> getRecentSearches(@RequestParam String userId) {
-        return ResponseEntity.ok(searchService.getRecentSearches(userId));
-    }
-
-
-    /**
-     * 인기 검색어 목록 조회
-     *
-     * @return 검색 횟수 기준으로 정렬된 인기 검색어 리스트
-     */
-    @GetMapping("/popular-searches")
-    public ResponseEntity<List<Map<String, Object>>> getPopularSearches() {
-        return ResponseEntity.ok(searchService.getPopularSearches());
     }
 }
