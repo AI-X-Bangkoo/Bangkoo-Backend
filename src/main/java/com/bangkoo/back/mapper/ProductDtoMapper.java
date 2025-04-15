@@ -25,6 +25,8 @@ public class ProductDtoMapper {
     public ProductsResponseDTO toResponseDTO(Product product) {
         ProductsResponseDTO dto = new ProductsResponseDTO();
         dto.setId(product.getId());
+        dto.setImageUrl(product.getImageUrl());
+        dto.setDescription(product.getDescription());
         dto.setName(product.getName());
         dto.setCreatedAt(product.getCreatedAt());
         return dto;

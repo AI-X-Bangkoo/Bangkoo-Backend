@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/admin")  // 관리자 페이지 관련 API는 /api/admin으로 변경
 public class ProductController {
 
     private final ProductService productService;
@@ -56,11 +56,14 @@ public class ProductController {
      * 전체 제품 조회 API (페이징)
      */
     @GetMapping("/product")
-    public List<ProductsResponseDTO> getAllProducts(@RequestParam(defaultValue = "0") int page,
-                                                    @RequestParam(defaultValue = "10") int size) {
+    public List<ProductsResponseDTO> getAllProducts(@RequestParam(name = "page") int page,
+                                                    @RequestParam(name = "size") int size) {
         Page<Product> productPage = productService.findAll(page, size);
+
+
         return productPage.map(dtoMapper::toResponseDTO).getContent();
     }
+
 
     /**
      * 단일 제품 조회 API
@@ -69,27 +72,5 @@ public class ProductController {
     public ProductsResponseDTO getProduct(@PathVariable String id) {
         Product product = productService.findById(id);
         return dtoMapper.toResponseDTO(product);
-    }
-
-    /**
-     * 관리자만 접근 가능한 전체 제품 조회 API
-     */
-    @GetMapping("/admin/products")
-    public List<ProductsResponseDTO> findAllProducts(Authentication authentication) {
-        // Authentication이 null인지 확인
-        if (authentication == null) {
-            throw new RuntimeException("인증되지 않은 사용자입니다.");
-        }
-
-        // 관리자 권한 확인
-        boolean isAdmin = authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .anyMatch(role -> role.equals("ROLE_ADMIN"));
-
-        if (!isAdmin) {
-            throw new RuntimeException("관리자만 접근할 수 있습니다.");
-        }
-
-        return productService.getAllProducts();
     }
 }
