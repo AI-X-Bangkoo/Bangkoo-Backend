@@ -9,15 +9,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.Date;
+import java.util.*;
 
 @Component
 public class JwtUtil {
@@ -41,11 +40,12 @@ public class JwtUtil {
     }
 
     // ====== JWT 생성 ======
-    public String generateAccessToken(String id, String email, String nickname) {
+    public String generateAccessToken(String id, String email, String nickname, String role) {
         return Jwts.builder()
                 .setSubject(email)
                 .claim("id", id)
                 .claim("nickname", nickname)
+                .claim("role", role)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtProperties.getAccessTokenExpirationMs()))
                 .signWith(secretKey, SignatureAlgorithm.HS256)
@@ -122,9 +122,16 @@ public class JwtUtil {
                 .getBody();
     }
 
+    /**
+     * 토큰의 유효성 검증
+     * @param token
+     * @return
+     */
     public Authentication getAuthentication(String token) {
-        String email = getEmailFromToken(token);
-        return new UsernamePasswordAuthenticationToken(email, "", Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")));
+        Claims claims = parseClaims(token);
+        String role = claims.get("role", String.class); // 역할을 가져옴
+        List<GrantedAuthority> authorities = Arrays.asList(new SimpleGrantedAuthority(role));
+        return new UsernamePasswordAuthenticationToken(claims.getSubject(), null, authorities);
     }
     // ====== 기타 유틸 ======
     public SecretKey getSecretKey(String key) {
@@ -191,6 +198,26 @@ public class JwtUtil {
     public String getUserIdFromToken(String token) {
         Claims claims = parseClaims(token);
         return claims.get("id", String.class);
+    }
+
+    /**
+     * use인지 admin인지
+     */
+    public String getJwtFromRequest(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("accessToken".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
+    }
+
+    public String getUserRoleFromToken(String token) {
+        Claims claims = getClaims(token);
+        return claims.get("role", String.class);
     }
 
 

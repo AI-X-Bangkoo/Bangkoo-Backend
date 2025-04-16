@@ -34,8 +34,7 @@ import java.util.Arrays;
 public class SecurityConfig {
 
     private final JwtUtil jwtUtil;
-
-
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     /**
      *
@@ -61,6 +60,7 @@ public class SecurityConfig {
             "/api/placement",
             "/api/placement/**",
             "/api/3d-url/**",
+            "/api/products/dummy",
             "/api/detect_all_base64"
     };
 
@@ -79,14 +79,16 @@ public class SecurityConfig {
                         .requestMatchers("/api/placement").permitAll()
                         .requestMatchers("/api/placement/**").permitAll()
                         .requestMatchers("/api/3d-url/**").permitAll()
-                        .requestMatchers("/api/redis/**").permitAll()
+                        .requestMatchers("/api/redis/**").permitAll()//인증된 사용자만 가능
+                        .requestMatchers("/auth/**", "/oauth/**").permitAll() // 인증 제외 경로
+                        .requestMatchers("/api/admin/product**").hasRole("ADMIN")
                         .requestMatchers("/api/detect_all_base64").permitAll()
                         .requestMatchers("/product/**").authenticated()     //인증된 사용자만 가능
                         .requestMatchers(allowUrls).permitAll()
+                      //관리자만 접근 가능
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil),
-                        UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // ✅ 수정됨
 
         return http.build();
     }
@@ -100,7 +102,6 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
-        configuration.setAllowedHeaders(Arrays.asList("Content-Type"));
         configuration.setAllowCredentials(true); // HttpOnly 쿠키 사용 시 필요
         configuration.setMaxAge(3600L);
 
@@ -127,4 +128,7 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
+
+
 }

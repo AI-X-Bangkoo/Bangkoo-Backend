@@ -1,6 +1,6 @@
 package com.bangkoo.back.controller.auth;
 
-import com.bangkoo.back.DTO.TokenResponseDTO;
+import com.bangkoo.back.dto.jwt.TokenResponseDTO;
 import com.bangkoo.back.service.auth.SocialOAuthService;
 import com.bangkoo.back.utils.JwtUtil;
 import jakarta.servlet.http.HttpServletResponse;
@@ -29,7 +29,7 @@ public class AuthController {
     private final JwtUtil jwtUtil;
 
 //    @Value("${kakao.client-id}")
-    @Value("${kakao.client-id}")
+    @Value("${security.oauth2.client.registration.kakao.client-id}")
     private String kakaoClientId;
 
     @Value("${kakao.redirect-uri}")
@@ -39,14 +39,11 @@ public class AuthController {
     @GetMapping("/kakao/login")
     public ResponseEntity<?> kakaoLogin() {
 
-        System.out.println("======= /kakao/login 진입 =======");
-
         String kakaoAuthUrl = "https://kauth.kakao.com/oauth/authorize?" +
                 "client_id=" + kakaoClientId +
                 "&redirect_uri=" + kakaoRedirectUri +
                 "&response_type=code";
 
-        System.out.println("======= /kakao/login kakaoAuthUrl: " + kakaoAuthUrl);
         return ResponseEntity.ok(Map.of("url", kakaoAuthUrl));
     }
 
@@ -54,7 +51,6 @@ public class AuthController {
     @PostMapping("/callback/kakao")
     public ResponseEntity<?> callback(@RequestParam("code") String code,
                                       HttpServletResponse response) {
-        
         try {
             System.out.println("code = " + code);
             TokenResponseDTO tokenDto = socialOAuthService.kakaoLogin(code);
@@ -78,15 +74,24 @@ public class AuthController {
                     .sameSite("Lax")
                     .build();
 
+            // role도 함께 쿠키로 저장 (optional)
+            String encodedRole = URLEncoder.encode(tokenDto.getRole(), StandardCharsets.UTF_8);
+            ResponseCookie roleCookie = ResponseCookie.from("role", encodedRole)
+                    .httpOnly(false)
+                    .secure(true)
+                    .path("/")
+                    .maxAge(60 * 60)
+                    .sameSite("Lax")
+                    .build();
 
             response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
             response.addHeader(HttpHeaders.SET_COOKIE, nicknameCookie.toString());
+            response.addHeader(HttpHeaders.SET_COOKIE, roleCookie.toString());
 
             // 응답 DTO에서 accessToken 제거 후 반환
             tokenDto.setAccessToken(null);
             tokenDto.setLogin(true);
 
-            System.out.println("tokenDto: " + tokenDto);
             return ResponseEntity.ok(tokenDto);
 
         } catch (Exception e) {
@@ -116,8 +121,16 @@ public class AuthController {
                 .sameSite("Lax")
                 .build();
 
+        ResponseCookie deleteRole = ResponseCookie.from("role", "")
+                .httpOnly(false)
+                .secure(false)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Lax")
+                .build();
         response.addHeader(HttpHeaders.SET_COOKIE, deleteAccessToken.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, deleteNickname.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, deleteRole.toString());
 
         return ResponseEntity.ok(Map.of("message", "로그아웃 완료"));
     }

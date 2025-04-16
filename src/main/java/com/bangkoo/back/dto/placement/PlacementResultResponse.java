@@ -28,4 +28,5 @@ public class PlacementResultResponse {
 
     /** 작성자 ID */
     private String userId;
+
 }
