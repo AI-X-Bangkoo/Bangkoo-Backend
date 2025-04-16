@@ -29,8 +29,25 @@ public class ProductController {
      */
     @PostMapping("/product/save")
     public ProductsResponseDTO saveProduct(@RequestBody ProductsRequestDTO requestDTO) {
+        //DTO를 엔티티로 반환
         Product product = dtoMapper.toEntity(requestDTO);
+
+        //외부 API(Gemini API(gpt?)에 제품 정보 보내서 상세 설명 및 임베딩 처리 요청
+      //  String detailedDescription = callGeminiAPI(product);
+
+        //이미지 및 텍스트 임베딩 생성
+        //List<Double> imageEmbedding = generateImageEmbedding(product.getImageUrl());
+        //List<Double> textEmbedding = generateTextEmbedding(detailedDescription);
+
+        //제품에 상세 설명, 이미지 임베딩, 텍스트 임베딩 추가
+//        product.setDetail(detailedDescription);
+//        product.setImageEmbedding(imageEmbedding);
+//        product.setTextEmbedding(textEmbedding);
+
+        //저장
         Product saved = productService.save(product);
+
+        //응답 DTO로 변환하여 반환
         return dtoMapper.toResponseDTO(saved);
     }
 

@@ -95,9 +95,7 @@ public class ProductService {
      */
     public Page<Product> findAll(int page, int size){
         Pageable pageable = PageRequest.of(page, size);
-        logger.info("페이징 요청 들어옴 page: {}, size: {}", page, size);
         Page<Product> result = productRepository.findAll(pageable);
-        logger.info("페이지 조회 결과: {}", result.getTotalElements()); // 여기 안 나오면 바로 터지는 것
         return result;
     }
 
@@ -108,10 +106,8 @@ public class ProductService {
      * @return 조회된 제품 객체
      */
     public Product findById(String id){
-        logger.info("제품 조회: ID {}", id);  // 로그 출력
         return productRepository.findById(id)
                 .orElseThrow(() -> {
-                    logger.error("제품을 찾지 못 했습니다. ID: {}", id);  // 로그 출력
                     return new RuntimeException("제품을 찾지 못 했습니다.");
                 });
     }
@@ -121,7 +117,6 @@ public class ProductService {
      * DTO로 변환해서 리스트로 만들기
      */
     public List<ProductsResponseDTO> getAllProducts() {
-        logger.info("모든 제품 조회");  // 로그 출력
         List<Product> products = productRepository.findAll();
         return products.stream().map(product -> {
             ProductsResponseDTO dto = new ProductsResponseDTO();
