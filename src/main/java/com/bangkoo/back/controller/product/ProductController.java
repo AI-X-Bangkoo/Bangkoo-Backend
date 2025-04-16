@@ -40,7 +40,6 @@ public class ProductController {
     @PutMapping("/product/{id}")
     public ProductsResponseDTO updateProduct(@PathVariable("id") String id, @RequestBody ProductsRequestDTO requestDTO) {
 
-        System.out.println("받아오는 id의 값:"+id);
         Product product = dtoMapper.toEntity(requestDTO);
         Product updated = productService.update(id, product);
         return dtoMapper.toResponseDTO(updated);
@@ -77,24 +76,19 @@ public class ProductController {
 
     private ProductPageResponseDTO getProducts(String search, int page, int size){
         Page<Product> productPage;
-        System.out.println("search: " + search);
+
 
         if (search != null && !search.isEmpty()) {
-            System.out.println("검색어가 존재함, 검색 수행");
+
             productPage = productService.searchByKeyword(search, page, size);
         } else {
-            System.out.println("검색어가 없음, 모든 제품 반환");
+
             productPage = productService.findAll(page, size);
         }
 
-        // productPage 내용 확인
-        System.out.println("검색된 제품 수: " + productPage.getTotalElements());
-        System.out.println("현재 페이지: " + productPage.getNumber());
-        System.out.println("전체 페이지 수: " + productPage.getTotalPages());
-
         List<ProductsResponseDTO> content = productPage.map(dtoMapper::toResponseDTO).getContent();
 
-        System.out.println("조회된 제품 리스트:");
+
         content.forEach(product -> System.out.println(product.getName()));  // product.getName()으로 제품 이름 출력
 
         return new ProductPageResponseDTO(
