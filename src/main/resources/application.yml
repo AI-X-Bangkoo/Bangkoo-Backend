@@ -51,4 +51,3 @@ ai:
   data:
     mongodb:
       uri: mongodb+srv://bangkoo:bangkoo@bangkoo.3bjilqn.mongodb.net/bangkoo?retryWrites=true&w=majority&appName=bangkoo
-
