@@ -8,6 +8,7 @@ public class ProductsRequestDTO {
      * 프론트에서 요청 받을 필드 정의
      */
 
+    private String id;             // id
     private String name;           // 제품명
     private String description;    // 간단 설명
     private String price;          // 가격 (₩단위 포함 또는 int)

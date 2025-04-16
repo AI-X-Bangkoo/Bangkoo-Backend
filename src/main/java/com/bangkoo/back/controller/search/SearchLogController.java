@@ -1,7 +1,6 @@
 package com.bangkoo.back.controller.search;
 
-import com.bangkoo.back.DTO.search.PopularSearchDTO;
-import com.bangkoo.back.model.search.SearchLog;
+import com.bangkoo.back.dto.search.PopularSearchDTO;
 import com.bangkoo.back.service.search.SearchLogService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
