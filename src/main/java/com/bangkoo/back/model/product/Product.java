@@ -40,4 +40,99 @@ public class Product {
 
     private LocalDateTime createdAt;
 
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getDetail() {
+        return detail;
+    }
+
+    public void setDetail(String detail) {
+        this.detail = detail;
+    }
+
+    public String getPrice() {
+        return price;
+    }
+
+    public void setPrice(String price) {
+        this.price = price;
+    }
+
+    public String getLink() {
+        return link;
+    }
+
+    public void setLink(String link) {
+        this.link = link;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public String getModel3dUrl() {
+        return model3dUrl;
+    }
+
+    public void setModel3dUrl(String model3dUrl) {
+        this.model3dUrl = model3dUrl;
+    }
+
+    public String getCsv() {
+        return csv;
+    }
+
+    public void setCsv(String csv) {
+        this.csv = csv;
+    }
+
+    public List<Double> getImageEmbedding() {
+        return imageEmbedding;
+    }
+
+    public void setImageEmbedding(List<Double> imageEmbedding) {
+        this.imageEmbedding = imageEmbedding;
+    }
+
+    public List<Double> getTextEmbedding() {
+        return textEmbedding;
+    }
+
+    public void setTextEmbedding(List<Double> textEmbedding) {
+        this.textEmbedding = textEmbedding;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 }
