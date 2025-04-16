@@ -61,8 +61,7 @@ public class SecurityConfig {
             "/api/placement/**",
             "/api/3d-url/**",
             "/api/products/dummy",
-
-
+            "/api/detect_all_base64"
     };
 
 
@@ -83,6 +82,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/redis/**").permitAll()//인증된 사용자만 가능
                         .requestMatchers("/auth/**", "/oauth/**").permitAll() // 인증 제외 경로
                         .requestMatchers("/api/admin/product**").hasRole("ADMIN")
+                        .requestMatchers("/api/detect_all_base64").permitAll()
+                        .requestMatchers("/product/**").authenticated()     //인증된 사용자만 가능
                         .requestMatchers(allowUrls).permitAll()
                       //관리자만 접근 가능
                         .anyRequest().authenticated()
