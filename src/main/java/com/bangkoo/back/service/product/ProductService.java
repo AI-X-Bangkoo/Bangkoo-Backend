@@ -9,7 +9,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,6 +23,8 @@ import java.util.Optional;
  */
 public class ProductService {
 
+    private static final Logger logger = LoggerFactory.getLogger(ProductService.class);  // Logger 객체 추가
+
     @Autowired
     private ProductRepository productRepository;
 
@@ -31,12 +34,13 @@ public class ProductService {
      * @return 저장된 제품 객체
      */
     public Product save(Product product){
-
         if(product.getName() == null || product.getImageUrl() == null){
+            logger.error("제품명과 이미지 URL은 필수입니다.");  // 로그 출력
             throw new IllegalArgumentException("제품명과 이미지 URL은 필수입니다.");
         }
 
         product.setCreatedAt(LocalDateTime.now());
+        logger.info("새로운 제품 저장: {}", product.getName());  // 로그 출력
         return productRepository.save(product);
     }
 
@@ -59,8 +63,11 @@ public class ProductService {
             product.setCsv(updated.getCsv());
             product.setImageEmbedding(updated.getImageEmbedding());
             product.setTextEmbedding(updated.getTextEmbedding());
+
+            logger.info("제품 수정: {}", product.getName());  // 로그 출력
             return productRepository.save(product);
         } else {
+            logger.error("제품을 찾지 못 했습니다. ID: {}", id);  // 로그 출력
             throw new RuntimeException("제품을 찾지 못 했습니다.");
         }
     }
@@ -70,10 +77,11 @@ public class ProductService {
      * @param id 삭제할 제품의 ID
      */
     public void delete(String id) {
-
         if(!productRepository.existsById(id)){
+            logger.error("해당 제품은 존재하지 않습니다. ID: {}", id);  // 로그 출력
             throw new RuntimeException("해당 제품은 존재하지 않습니다.");
         }
+        logger.info("제품 삭제: ID {}", id);  // 로그 출력
         productRepository.deleteById(id);
     }
 
@@ -84,9 +92,13 @@ public class ProductService {
      * @return 페이징된 제품 리스트
      */
     public Page<Product> findAll(int page, int size){
-        Pageable pageable = PageRequest.of(page, size);  // 페이징 처리
-        return productRepository.findAll(pageable);
+        Pageable pageable = PageRequest.of(page, size);
+        logger.info("페이징 요청 들어옴 page: {}, size: {}", page, size);
+        Page<Product> result = productRepository.findAll(pageable);
+        logger.info("페이지 조회 결과: {}", result.getTotalElements()); // 여기 안 나오면 바로 터지는 것
+        return result;
     }
+
 
     /**
      * 제품 ID로 단일 제품을 조회합니다.
@@ -94,8 +106,12 @@ public class ProductService {
      * @return 조회된 제품 객체
      */
     public Product findById(String id){
+        logger.info("제품 조회: ID {}", id);  // 로그 출력
         return productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("제품을 찾지 못 했습니다."));
+                .orElseThrow(() -> {
+                    logger.error("제품을 찾지 못 했습니다. ID: {}", id);  // 로그 출력
+                    return new RuntimeException("제품을 찾지 못 했습니다.");
+                });
     }
 
     /**
@@ -103,14 +119,19 @@ public class ProductService {
      * DTO로 변환해서 리스트로 만들기
      */
     public List<ProductsResponseDTO> getAllProducts() {
+        logger.info("모든 제품 조회");  // 로그 출력
         List<Product> products = productRepository.findAll();
         return products.stream().map(product -> {
             ProductsResponseDTO dto = new ProductsResponseDTO();
             dto.setId(product.getId());
+            dto.setDescription(product.getDescription());
+            dto.setLink(product.getLink());
+            dto.setImageUrl(product.getImageUrl());
             dto.setName(product.getName());
             dto.setCreatedAt(product.getCreatedAt());
             return dto;
         }).toList();
     }
+
 
 }
