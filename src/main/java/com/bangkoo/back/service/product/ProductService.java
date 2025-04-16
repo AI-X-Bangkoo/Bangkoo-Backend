@@ -125,6 +125,7 @@ public class ProductService {
             ProductsResponseDTO dto = new ProductsResponseDTO();
             dto.setId(product.getId());
             dto.setDescription(product.getDescription());
+            dto.setLink(product.getLink());
             dto.setImageUrl(product.getImageUrl());
             dto.setName(product.getName());
             dto.setCreatedAt(product.getCreatedAt());
