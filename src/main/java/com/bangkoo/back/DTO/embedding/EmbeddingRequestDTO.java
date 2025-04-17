@@ -18,4 +18,5 @@ public class EmbeddingRequestDTO {
     private String detail;
     private String imageUrl;
     private String link;
+
 }
