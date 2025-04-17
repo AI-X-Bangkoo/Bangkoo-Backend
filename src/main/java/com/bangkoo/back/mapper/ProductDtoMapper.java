@@ -15,6 +15,7 @@ public class ProductDtoMapper {
         product.setId(dto.getId());
         product.setName(dto.getName());
         product.setDescription(dto.getDescription());
+        product.setDetail(dto.getDetail());
         product.setPrice(dto.getPrice());
         product.setLink(dto.getLink());
         product.setImageUrl(dto.getImageUrl());
@@ -29,6 +30,7 @@ public class ProductDtoMapper {
         dto.setLink(product.getLink());
         dto.setImageUrl(product.getImageUrl());
         dto.setDescription(product.getDescription());
+        dto.setModel3dUrl(product.getModel3dUrl());
         dto.setName(product.getName());
         dto.setCreatedAt(product.getCreatedAt());
         return dto;

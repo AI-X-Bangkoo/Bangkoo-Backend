@@ -11,6 +11,7 @@ public class ProductsRequestDTO {
     private String id;             // 제품 id
     private String name;           // 제품명
     private String description;    // 간단 설명
+    private String detail;         //상세 설명
     private String price;          // 가격 (₩단위 포함 또는 int)
     private String link;           // IKEA 상세 링크
     private String imageUrl;       // 대표 이미지 URL

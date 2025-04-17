@@ -1,5 +1,6 @@
 package com.bangkoo.back.model.product;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -21,6 +22,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Document(collection = "products")
+@Builder
 public class Product {
 
     @Id
@@ -37,7 +39,9 @@ public class Product {
 
     private List<Double> imageEmbedding;    // CLIP 기반 이미지 벡터
     private List<Double> textEmbedding;     // 텍스트 기반 설명 벡터
-
-    private LocalDateTime createdAt;
+    private List<Double> combinedEmbedding; //결합된 임베딩 값
+    
+    private LocalDateTime updatedAt;        //제품 등록 시간
+    private LocalDateTime createdAt;        //제품 수정 시간
 
 }

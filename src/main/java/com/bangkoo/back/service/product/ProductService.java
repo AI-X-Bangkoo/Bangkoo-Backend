@@ -3,6 +3,7 @@ package com.bangkoo.back.service.product;
 import com.bangkoo.back.dto.product.ProductsResponseDTO;
 import com.bangkoo.back.model.product.Product;
 import com.bangkoo.back.repository.product.ProductRepository;
+import com.bangkoo.back.service.embedding.EmbeddingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -26,6 +27,7 @@ import java.util.Optional;
  */
 public class ProductService {
 
+    private final EmbeddingService embeddingService;            //임베딩 서비스 추가
     private static final Logger logger = LoggerFactory.getLogger(ProductService.class);  // Logger 객체 추가
 
     @Autowired
@@ -41,6 +43,14 @@ public class ProductService {
             logger.error("제품명과 이미지 URL은 필수입니다.");  // 로그 출력
             throw new IllegalArgumentException("제품명과 이미지 URL은 필수입니다.");
         }
+
+        // 이미지 URL을 바탕으로 이미지 임베딩을 생성
+        List<Double> imageEmbedding = embeddingService.generateImageEmbedding(product.getImageUrl());
+        product.setImageEmbedding(imageEmbedding);  // Product 객체에 이미지 임베딩 값을 설정
+
+        // 텍스트(상세설명, description 등)을 바탕으로 텍스트 임베딩을 생성
+        List<Double> textEmbedding = embeddingService.generateTextEmbedding(product.getDescription());
+        product.setTextEmbedding(textEmbedding);  // Product 객체에 텍스트 임베딩 값을 설정
 
         product.setCreatedAt(LocalDateTime.now());
         logger.info("새로운 제품 저장: {}", product.getName());  // 로그 출력
@@ -60,6 +70,7 @@ public class ProductService {
             product.setId(updated.getId());
             product.setName(updated.getName());
             product.setDescription(updated.getDescription());
+            product.setModel3dUrl(updated.getModel3dUrl());
             product.setDetail(updated.getDetail());
             product.setPrice(updated.getPrice());
             product.setLink(updated.getLink());
@@ -145,5 +156,6 @@ public class ProductService {
         return productRepository.searchByKeyword(search, pageable);
 
     }
+
 
 }
