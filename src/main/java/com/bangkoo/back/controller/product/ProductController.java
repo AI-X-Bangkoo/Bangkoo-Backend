@@ -7,7 +7,10 @@ import com.bangkoo.back.mapper.ProductDtoMapper;
 import com.bangkoo.back.model.product.Product;
 import com.bangkoo.back.service.product.ProductService;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -116,4 +119,16 @@ public class ProductController {
         );
     }
 
+    /**
+     * CSV 파일 업로드 관련 API
+     */
+    @PostMapping("/CSVupload")
+    public ResponseEntity<?> uploadCSV(@RequestParam("file") MultipartFile file) {
+        try{
+            List<Product> saved = productService.saveProductFromCSV(file);
+            return ResponseEntity.ok(saved);
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("CSV 업로드 실패" + e.getMessage());
+        }
+    }
 }

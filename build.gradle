@@ -41,6 +41,7 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-databind'    //jaCKSON
     implementation 'org.projectlombok:lombok:1.18.30'           //lombok
     annotationProcessor 'org.projectlombok:lombok:1.18.30'
+    implementation 'com.opencsv:opencsv:5.9'
 
     implementation 'com.amazonaws:aws-java-sdk-s3:1.12.782'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'

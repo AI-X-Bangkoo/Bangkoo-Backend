@@ -4,19 +4,24 @@ import com.bangkoo.back.dto.product.ProductsResponseDTO;
 import com.bangkoo.back.model.product.Product;
 import com.bangkoo.back.repository.product.ProductRepository;
 import com.bangkoo.back.service.embedding.EmbeddingService;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.multipart.MultipartFile;
 
-import javax.management.Query;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -157,5 +162,62 @@ public class ProductService {
 
     }
 
+    /**
+     * CSV 업로드 및 저장 기능
+     */
 
+    public List<Product> saveProductFromCSV(MultipartFile file) throws Exception {
+        List<Product> savedProducts = new ArrayList<>();
+
+        try (Reader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
+            CSVReader csvReader = new CSVReaderBuilder(reader).withSkipLines(1).build(); // 헤더 스킵
+            List<String[]> rows = csvReader.readAll();
+
+            for (String[] row : rows) {
+                if (row.length < 8) continue;
+
+                Product product = Product.builder()
+                        .name(row[0])
+                        .description(row[1])
+                        .detail(row[2])
+                        .price(row[3])
+                        .link(row[4])
+                        .imageUrl(row[5])
+                        .model3dUrl(row[6])
+                        .csv(row[7])
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
+                        .build();
+
+                try {
+                    List<Double> imageEmbedding = embeddingService.generateImageEmbedding(product.getImageUrl());
+                    List<Double> textEmbedding = embeddingService.generateTextEmbedding(product.getDescription());
+                    List<Double> combined = combineEmbeddings(imageEmbedding, textEmbedding);
+
+                    product.setImageEmbedding(imageEmbedding);
+                    product.setTextEmbedding(textEmbedding);
+                    product.setCombinedEmbedding(combined);
+                } catch (Exception e) {
+                    logger.warn("임베딩 실패 - 제품명: {}", product.getName());
+                }
+
+                savedProducts.add(productRepository.save(product));
+            }
+
+        } catch (Exception e) {
+            logger.error("CSV 처리 중 오류 발생", e);
+            throw new Exception("CSV 처리 중 오류 발생: " + e.getMessage());
+        }
+
+        return savedProducts;
+    }
+
+    // ✅ 이미지/텍스트 임베딩 결합 메서드
+    public List<Double> combineEmbeddings(List<Double> image, List<Double> text) {
+        List<Double> combined = new ArrayList<>();
+        for (int i = 0; i < Math.min(image.size(), text.size()); i++) {
+            combined.add((image.get(i) + text.get(i)) / 2.0);
+        }
+        return combined;
+    }
 }
