@@ -47,7 +47,7 @@ public class PlacementService {
      */
     public String sendToAiServer(String mode, MultipartFile background, MultipartFile reference) throws IOException {
         String aiUrl = aiBaseUrl + "/placement";
-
+        System.out.println(aiUrl);
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("mode", mode);
         body.add("background", convertToResource(background));

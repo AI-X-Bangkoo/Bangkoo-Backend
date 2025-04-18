@@ -1,6 +1,6 @@
 package com.bangkoo.back.service.detection;
 
-import com.bangkoo.back.DTO.detection.DetectionResponseDTO;
+import com.bangkoo.back.dto.detection.DetectionResponseDTO;
 import com.bangkoo.back.model.detection.Detection;
 import com.bangkoo.back.model.detection.DetectionResult;
 import com.bangkoo.back.utils.MultipartInputStreamFileResource;
@@ -29,7 +29,6 @@ public class DetectionService {
         // Multipart 형식으로 이미지 설정
         MultipartInputStreamFileResource fileResource =
                 new MultipartInputStreamFileResource(new ByteArrayInputStream(imageBytes), "uploaded.png");
-
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("file", fileResource);
         body.add("canvasWidth", String.valueOf(width));   // ✅ width 추가
@@ -44,7 +43,6 @@ public class DetectionService {
         );
 
         DetectionResponseDTO responseBody = response.getBody();
-
 
         List<DetectionResult> results = responseBody.getResults();  // ✅ 결과 꺼냄
         List<String> thumbnails = responseBody.getThumbnails_base64();

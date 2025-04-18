@@ -1,6 +1,6 @@
 package com.bangkoo.back.service.search;
 
-import com.bangkoo.back.DTO.search.PopularSearchDTO;
+import com.bangkoo.back.dto.search.PopularSearchDTO;
 import com.bangkoo.back.model.search.SearchLog;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
