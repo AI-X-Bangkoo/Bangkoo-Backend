@@ -1,6 +1,6 @@
 package com.bangkoo.back.service.detection;
 
-import com.bangkoo.back.DTO.detection.DetectionResponseDTO;
+import com.bangkoo.back.dto.detection.DetectionResponseDTO;
 import com.bangkoo.back.model.detection.Detection;
 import com.bangkoo.back.model.detection.DetectionResult;
 import com.bangkoo.back.utils.MultipartInputStreamFileResource;
@@ -44,7 +44,6 @@ public class DetectionService {
         );
 
         DetectionResponseDTO responseBody = response.getBody();
-
 
         List<DetectionResult> results = responseBody.getResults();  // ✅ 결과 꺼냄
         List<String> thumbnails = responseBody.getThumbnails_base64();

@@ -8,18 +8,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * ✅ RedisController
+ * ✅ RedisController (세션 기반 버전)
  * - 작성자: 김태원
  * - 작성일: 2025-04-12
  *
- * 🧠 Redis 기반 인테리어 상태 히스토리 관리 컨트롤러
- * - JWT를 통해 사용자 식별 후, 사용자별 히스토리 stack을 Redis에 저장
- * - 상태 저장(push), 되돌리기(undo), 다시 실행(redo), 현재 상태 조회 제공
+ * 🧠 Redis를 활용한 세션 단위 인테리어 상태 관리 컨트롤러
+ * - JWT로 사용자 인증 → 세션 단위로 undo/redo 히스토리 분리 저장
  */
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/redis")
 public class RedisController {
 
     private final RedisService redisService;
@@ -27,48 +26,68 @@ public class RedisController {
 
     /**
      * 📌 상태 저장 (push)
-     * - 사용자의 현재 상태를 undo 스택에 push
-     * - redo 스택은 자동 clear됨
+     * - undo 스택에 push, redo 스택은 초기화
      */
-    @PostMapping("/redis/state")
-    public ResponseEntity<String> pushState(@RequestBody String base64, HttpServletRequest request) {
+    @PostMapping("/state")
+    public ResponseEntity<String> pushState(
+            @RequestParam String sessionId,
+            @RequestBody String base64,
+            HttpServletRequest request
+    ) {
         String userId = jwtUtil.getUserIdFromToken(jwtUtil.extractToken(request));
-        redisService.pushState(userId, base64);
-        return ResponseEntity.ok("✅ 상태 저장 완료 (undo stack에 push)");
+        redisService.pushState(userId, sessionId, base64);
+        return ResponseEntity.ok("✅ 상태 저장 완료");
     }
 
     /**
-     * 🔙 상태 되돌리기 (undo)
-     * - undo 스택에서 pop → redo 스택으로 push
-     * - 이전 상태 반환
+     * 🔙 undo 요청
      */
-    @PostMapping("/redis/undo")
-    public ResponseEntity<?> undo(HttpServletRequest request) {
+    @PostMapping("/undo")
+    public ResponseEntity<?> undo(
+            @RequestParam String sessionId,
+            HttpServletRequest request
+    ) {
         String userId = jwtUtil.getUserIdFromToken(jwtUtil.extractToken(request));
-        String result = redisService.undo(userId);
+        String result = redisService.undo(userId, sessionId);
         return result == null ? ResponseEntity.noContent().build() : ResponseEntity.ok(result);
     }
 
     /**
-     * 🔁 상태 다시 실행 (redo)
-     * - redo 스택에서 pop → undo 스택으로 push
-     * - 복원 상태 반환
+     * 🔁 redo 요청
      */
-    @PostMapping("/redis/redo")
-    public ResponseEntity<?> redo(HttpServletRequest request) {
+    @PostMapping("/redo")
+    public ResponseEntity<?> redo(
+            @RequestParam String sessionId,
+            HttpServletRequest request
+    ) {
         String userId = jwtUtil.getUserIdFromToken(jwtUtil.extractToken(request));
-        String result = redisService.redo(userId);
+        String result = redisService.redo(userId, sessionId);
         return result == null ? ResponseEntity.noContent().build() : ResponseEntity.ok(result);
     }
 
     /**
      * 📂 현재 상태 조회
-     * - 사용자별 current 상태 확인
      */
-    @GetMapping("/redis/state")
-    public ResponseEntity<?> getCurrent(HttpServletRequest request) {
+    @GetMapping("/state")
+    public ResponseEntity<?> getCurrent(
+            @RequestParam String sessionId,
+            HttpServletRequest request
+    ) {
         String userId = jwtUtil.getUserIdFromToken(jwtUtil.extractToken(request));
-        String current = redisService.getCurrentState(userId);
+        String current = redisService.getCurrentState(userId, sessionId);
         return current == null ? ResponseEntity.noContent().build() : ResponseEntity.ok(current);
+    }
+
+    /**
+     * 🧹 세션별 히스토리 삭제
+     */
+    @DeleteMapping("/clear")
+    public ResponseEntity<String> clearSession(
+            @RequestParam String sessionId,
+            HttpServletRequest request
+    ) {
+        String userId = jwtUtil.getUserIdFromToken(jwtUtil.extractToken(request));
+        redisService.clearSession(userId, sessionId);
+        return ResponseEntity.ok("🧹 세션 히스토리 삭제 완료");
     }
 }
