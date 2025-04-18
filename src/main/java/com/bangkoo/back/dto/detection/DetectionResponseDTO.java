@@ -1,6 +1,5 @@
 package com.bangkoo.back.dto.detection;
 
-import com.bangkoo.back.model.detection.Detection;
 import com.bangkoo.back.model.detection.DetectionResult;
 import lombok.Data;
 import java.util.List;

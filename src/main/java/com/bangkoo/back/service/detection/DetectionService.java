@@ -29,6 +29,7 @@ public class DetectionService {
         // Multipart 형식으로 이미지 설정
         MultipartInputStreamFileResource fileResource =
                 new MultipartInputStreamFileResource(new ByteArrayInputStream(imageBytes), "uploaded.png");
+
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("file", fileResource);
         body.add("canvasWidth", String.valueOf(width));   // ✅ width 추가
