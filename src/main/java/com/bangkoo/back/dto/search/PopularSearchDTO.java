@@ -1,4 +1,4 @@
-package com.bangkoo.back.DTO.search;
+package com.bangkoo.back.dto.search;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

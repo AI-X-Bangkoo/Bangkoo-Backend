@@ -1,7 +1,6 @@
 package com.bangkoo.back.service.detection;
 
-import com.bangkoo.back.DTO.detection.DetectionResponseDTO;
-import com.bangkoo.back.model.detection.Detection;
+import com.bangkoo.back.dto.detection.DetectionResponseDTO;
 import com.bangkoo.back.model.detection.DetectionResult;
 import com.bangkoo.back.utils.MultipartInputStreamFileResource;
 import org.springframework.stereotype.Service;
