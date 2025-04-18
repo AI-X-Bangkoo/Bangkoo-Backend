@@ -16,4 +16,5 @@ public class ProductsResponseDTO {
     private String link;            //이동하는 링크
     private String imageUrl;       // 대표 이미지 URL
     private LocalDateTime createdAt; //등록일
+    private LocalDateTime updatedAt;    //수정일
 }

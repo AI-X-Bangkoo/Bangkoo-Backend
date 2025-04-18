@@ -50,7 +50,7 @@ public class SearchService {
             String userId
     ) throws IOException {
 
-        if (userId != null && !userId.equals("anonymous") && query != null && !query.isEmpty()) {
+        if (userId != null && query != null && !query.isEmpty()) {
             searchLogService.saveSearchLog(query, userId, image != null ? "image+text" : "text");
         }
 

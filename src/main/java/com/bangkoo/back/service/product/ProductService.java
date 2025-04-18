@@ -6,12 +6,15 @@ import com.bangkoo.back.repository.product.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.management.Query;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -54,15 +57,14 @@ public class ProductService {
         Optional<Product> existing = productRepository.findById(id);
         if (existing.isPresent()) {
             Product product = existing.get();
+            product.setId(updated.getId());
             product.setName(updated.getName());
             product.setDescription(updated.getDescription());
             product.setDetail(updated.getDetail());
             product.setPrice(updated.getPrice());
             product.setLink(updated.getLink());
             product.setImageUrl(updated.getImageUrl());
-            product.setCsv(updated.getCsv());
-            product.setImageEmbedding(updated.getImageEmbedding());
-            product.setTextEmbedding(updated.getTextEmbedding());
+
 
             logger.info("제품 수정: {}", product.getName());  // 로그 출력
             return productRepository.save(product);
@@ -133,5 +135,20 @@ public class ProductService {
         }).toList();
     }
 
+    /**
+     * 검색 관련
+
+     * @param page 페이지 번호
+     * @param size 페이지당 데이터 개수
+     * @return 검색된 제품 리스트 (페이징 적용)
+     */
+    public Page<Product> searchByKeyword(String search, int page, int size) {
+        // Pageable 생성
+        PageRequest pageable = PageRequest.of(page, size);
+
+        // ProductRepository의 searchByKeyword 호출
+        return productRepository.searchByKeyword(search, pageable);
+
+    }
 
 }

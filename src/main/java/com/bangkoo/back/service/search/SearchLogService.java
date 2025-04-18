@@ -39,7 +39,7 @@ public class SearchLogService {
      * @param source 검색 요청 출처 (예: text, image+text 등)
      */
     public void saveSearchLog(String query, String userId, String source) {
-        if (query == null || userId == null || userId.equals("anonymous")) return;
+        if (query == null || userId == null) return;
 
         SearchLog log = new SearchLog();
         log.setQuery(query.trim());
@@ -57,7 +57,7 @@ public class SearchLogService {
      * @return 최근 검색어 문자열 리스트
      */
     public List<String> getRecentSearches(String userId, int limit) {
-        if (userId == null || userId.equals("anonymous")) return List.of();
+        if (userId == null) return List.of();
 
         Query query = new Query(Criteria.where("user_id").is(userId))
                 .with(Sort.by(Sort.Direction.DESC, "timestamp"))
