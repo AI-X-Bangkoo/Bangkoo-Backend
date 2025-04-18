@@ -25,9 +25,9 @@ public class RedisService {
      * - undo 스택에 새 상태 push
      * - redo 스택은 초기화
      */
-    public void pushState(String userId, String base64) {
-        String undoKey = getUndoKey(userId);
-        String redoKey = getRedoKey(userId);
+    public void pushState(String userId, String sessionId, String base64) {
+        String undoKey = getUndoKey(userId, sessionId);
+        String redoKey = getRedoKey(userId, sessionId);
 
         redisTemplate.opsForList().leftPush(undoKey, base64);
         redisTemplate.delete(redoKey); // 새로 저장했으니 redo 초기화
@@ -38,9 +38,9 @@ public class RedisService {
      * - 현재 상태 pop → redo 스택에 push
      * - undo 스택의 다음 항목을 current로 반환
      */
-    public String undo(String userId) {
-        String undoKey = getUndoKey(userId);
-        String redoKey = getRedoKey(userId);
+    public String undo(String userId, String sessionId) {
+        String undoKey = getUndoKey(userId, sessionId);
+        String redoKey = getRedoKey(userId, sessionId);
 
         Long size = redisTemplate.opsForList().size(undoKey);
         if (size == null || size <= 1) return null;
@@ -58,9 +58,9 @@ public class RedisService {
      * - redo에서 pop → undo에 push
      * - 새 상태를 current로 반환
      */
-    public String redo(String userId) {
-        String undoKey = getUndoKey(userId);
-        String redoKey = getRedoKey(userId);
+    public String redo(String userId, String sessionId) {
+        String undoKey = getUndoKey(userId, sessionId);
+        String redoKey = getRedoKey(userId, sessionId);
 
         String popped = redisTemplate.opsForList().leftPop(redoKey);
         if (popped != null) {
@@ -74,25 +74,25 @@ public class RedisService {
      * 📂 현재 상태 조회
      * - undo 스택의 top을 반환
      */
-    public String getCurrentState(String userId) {
-        String undoKey = getUndoKey(userId);
+    public String getCurrentState(String userId, String sessionId) {
+        String undoKey = getUndoKey(userId, sessionId);
         return redisTemplate.opsForList().index(undoKey, 0);
     }
 
     /**
      * 🧹 사용자 상태 전체 초기화
      */
-    public void clearAll(String userId) {
-        redisTemplate.delete(getUndoKey(userId));
-        redisTemplate.delete(getRedoKey(userId));
+    public void clearSession(String userId, String sessionId) {
+        redisTemplate.delete(getUndoKey(userId, sessionId));
+        redisTemplate.delete(getRedoKey(userId, sessionId));
     }
 
     // 🔑 키 생성 도우미
-    private String getUndoKey(String userId) {
-        return "undo:" + userId;
+    private String getUndoKey(String userId, String sessionId) {
+        return "undo:" + userId + ":" + sessionId;
     }
 
-    private String getRedoKey(String userId) {
-        return "redo:" + userId;
+    private String getRedoKey(String userId, String sessionId) {
+        return "redo:" + userId + ":" + sessionId;
     }
 }

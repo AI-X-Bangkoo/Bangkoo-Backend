@@ -1,6 +1,6 @@
 package com.bangkoo.back.controller.detection;
 
-import com.bangkoo.back.DTO.detection.DetectionResponseDTO;
+import com.bangkoo.back.dto.detection.DetectionResponseDTO;
 import com.bangkoo.back.service.detection.DetectionService;
 import com.bangkoo.back.utils.MultipartInputStreamFileResource;
 import lombok.RequiredArgsConstructor;
@@ -41,7 +41,6 @@ public class DetectionController {
         System.out.println("📐 canvas size: " + canvasWidth + "x" + canvasHeight);
         // 파일을 바이트 배열로 읽기
         byte[] imageBytes = file.getBytes();
-
         // 감지 처리 결과
         DetectionResponseDTO result = detectionService.upload(imageBytes,canvasWidth, canvasHeight);
 

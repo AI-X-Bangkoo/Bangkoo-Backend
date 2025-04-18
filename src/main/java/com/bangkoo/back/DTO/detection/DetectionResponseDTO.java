@@ -1,4 +1,4 @@
-package com.bangkoo.back.DTO.detection;
+package com.bangkoo.back.dto.detection;
 
 import com.bangkoo.back.model.detection.Detection;
 import com.bangkoo.back.model.detection.DetectionResult;
