@@ -34,7 +34,6 @@ public class DetectionController {
         System.out.println("📐 canvas size: " + canvasWidth + "x" + canvasHeight);
         // 파일을 바이트 배열로 읽기
         byte[] imageBytes = file.getBytes();
-
         // 감지 처리 결과
         DetectionResponseDTO result = detectionService.upload(imageBytes,canvasWidth, canvasHeight);
 
