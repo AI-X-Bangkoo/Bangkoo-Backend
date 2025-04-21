@@ -1,5 +1,6 @@
 package com.bangkoo.back.service.product;
 
+import com.bangkoo.back.dto.product.ProductsRequestDTO;
 import com.bangkoo.back.dto.product.ProductsResponseDTO;
 import com.bangkoo.back.model.product.Product;
 import com.bangkoo.back.repository.product.ProductRepository;
@@ -45,22 +46,79 @@ public class ProductService {
      */
     public Product save(Product product){
         if(product.getName() == null || product.getImageUrl() == null){
-            logger.error("제품명과 이미지 URL은 필수입니다.");  // 로그 출력
+            logger.error("제품명과 이미지 URL은 필수입니다.");
             throw new IllegalArgumentException("제품명과 이미지 URL은 필수입니다.");
         }
 
-        // 이미지 URL을 바탕으로 이미지 임베딩을 생성
         List<Double> imageEmbedding = embeddingService.generateImageEmbedding(product.getImageUrl());
-        product.setImageEmbedding(imageEmbedding);  // Product 객체에 이미지 임베딩 값을 설정
-
-        // 텍스트(상세설명, description 등)을 바탕으로 텍스트 임베딩을 생성
         List<Double> textEmbedding = embeddingService.generateTextEmbedding(product.getDescription());
-        product.setTextEmbedding(textEmbedding);  // Product 객체에 텍스트 임베딩 값을 설정
+        List<Double> combined = combineEmbeddings(imageEmbedding, textEmbedding); // ✅ 추가
+
+        product.setImageEmbedding(imageEmbedding);
+        product.setTextEmbedding(textEmbedding);
+        product.setCombinedEmbedding(combined); // ✅ 추가
 
         product.setCreatedAt(LocalDateTime.now());
-        logger.info("새로운 제품 저장: {}", product.getName());  // 로그 출력
+        logger.info("새로운 제품 저장: {}", product.getName());
+
         return productRepository.save(product);
     }
+
+    /**
+     * CSV파일을 저장
+     */
+    public List<Product> saveProductsFromJson(List<ProductsRequestDTO> productsDtoList) {
+        List<Product> savedProducts = new ArrayList<>();
+
+        // 🔹 Step 1: 모든 이미지 URL 추출
+        List<String> imageUrls = productsDtoList.stream()
+                .map(ProductsRequestDTO::getImageUrl)
+                .toList();
+
+        // 🔹 Step 2: 이미지 임베딩 한 번에 요청
+        List<List<Double>> imageEmbeddings = embeddingService.generateImageEmbeddings(imageUrls);
+
+        for (int i = 0; i < productsDtoList.size(); i++) {
+            ProductsRequestDTO dto = productsDtoList.get(i);
+            try {
+                Product product = Product.builder()
+                        .name(dto.getName())
+                        .description(dto.getDescription())
+                        .detail(dto.getDetail())
+                        .price(dto.getPrice())
+                        .link(dto.getLink())
+                        .imageUrl(dto.getImageUrl())
+                        .model3dUrl(dto.getModel3dUrl())
+                        .csv(dto.getCsv())
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
+                        .build();
+
+                // 🔹 이미지 임베딩
+                List<Double> imageEmbedding = imageEmbeddings.get(i);
+                if (imageEmbedding == null || imageEmbedding.isEmpty()) {
+                    logger.warn("이미지 임베딩 실패 - 제품명: {}", dto.getName());
+                    continue; // skip 저장
+                }
+
+                // 🔹 텍스트 임베딩 및 결합
+                List<Double> textEmbedding = embeddingService.generateTextEmbedding(product.getDescription());
+                List<Double> combined = combineEmbeddings(imageEmbedding, textEmbedding);
+
+                product.setImageEmbedding(imageEmbedding);
+                product.setTextEmbedding(textEmbedding);
+                product.setCombinedEmbedding(combined);
+
+                savedProducts.add(productRepository.save(product));
+            } catch (Exception e) {
+                logger.warn("임베딩 또는 저장 실패 - 제품명: {}, 오류: {}", dto.getName(), e.getMessage());
+            }
+        }
+
+        return savedProducts;
+    }
+
+
 
     /**
      * 기존 제품을 수정합니다. 해당 ID로 제품을 찾고, 값들을 업데이트한 후 저장합니다.
@@ -219,5 +277,10 @@ public class ProductService {
             combined.add((image.get(i) + text.get(i)) / 2.0);
         }
         return combined;
+    }
+
+    //다수의 상품 관련
+    public List<Product> saveAll(List<Product> products) {
+        return productRepository.saveAll(products);
     }
 }

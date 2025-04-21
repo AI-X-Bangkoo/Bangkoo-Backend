@@ -1,8 +1,14 @@
 package com.bangkoo.back.dto.product;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ProductsRequestDTO {
     /**
      * 프론트에서 요청 받을 필드 정의
@@ -16,5 +22,5 @@ public class ProductsRequestDTO {
     private String link;           // IKEA 상세 링크
     private String imageUrl;       // 대표 이미지 URL
     private String model3dUrl;     // 3D 이미지 URL(태원)
-
+    private String csv;
 }
