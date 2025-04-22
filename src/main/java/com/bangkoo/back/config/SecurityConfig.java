@@ -62,7 +62,8 @@ public class SecurityConfig {
             "/api/3d-url/**",
             "/api/products/dummy",
             "/api/detect_all_base64",
-            "/api/embedding"
+            "/api/embedding",
+            "/api/recommendation",
     };
 
 

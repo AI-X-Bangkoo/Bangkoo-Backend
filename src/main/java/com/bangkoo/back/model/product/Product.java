@@ -37,6 +37,7 @@ public class Product {
     private String model3dUrl;     // 3D 이미지 URL(태원)
     private String csv;            // 출처 csv 파일명
 
+    private String category;
     private List<Double> imageEmbedding;    // CLIP 기반 이미지 벡터
     private List<Double> textEmbedding;     // 텍스트 기반 설명 벡터
     private List<Double> combinedEmbedding; //결합된 임베딩 값
