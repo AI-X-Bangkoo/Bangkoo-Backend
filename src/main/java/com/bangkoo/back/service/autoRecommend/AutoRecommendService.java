@@ -3,14 +3,14 @@ package com.bangkoo.back.service.autoRecommend;
 import com.bangkoo.back.model.product.Product;
 import com.bangkoo.back.repository.product.ProductRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.http.*;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -19,104 +19,95 @@ public class AutoRecommendService {
     private final ProductRepository productRepository;
     private final RestTemplate restTemplate;
 
-    // FastAPI AI 서버 주소
-    private static final String AI_IMAGE_EMBEDDING_URL = "http://localhost:8000/api/style-recommendation";
+    // FastAPI AI 서버 주소 및 방 분석 엔드포인트
+    private static final String AI_ANALYZE_ROOM_URL = "http://localhost:8000/api/analyze-room";
 
     /**
-     * AI 임베딩 + 스타일별 추천
+     * FastAPI 서버로부터 방 스타일 분석 결과 요청
+     */
+    public Map<String, Object> requestRoomAnalysis(byte[] imageBytes) {
+        System.out.println("백엔드: AI 서버로 이미지 전송 시작..."); // 추가된 시스템 아웃 프린트라인
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(createMultipartBody(imageBytes), headers);
+
+        ResponseEntity<Map> response = restTemplate.postForEntity(
+                AI_ANALYZE_ROOM_URL, requestEntity, Map.class
+        );
+
+        if (response.getStatusCode() != HttpStatus.OK) {
+            System.err.println("백엔드: AI 서버로부터 분석 결과를 받지 못했습니다. 상태 코드: " + response.getStatusCode()); // 에러 시 로그
+            throw new RuntimeException("AI 서버로부터 분석 결과를 받지 못했습니다.");
+        }
+
+        System.out.println("백엔드: AI 서버로부터 분석 결과 수신 완료."); // 추가된 시스템 아웃 프린트라인
+
+        return response.getBody();
+    }
+
+    private MultiValueMap<String, Object> createMultipartBody(byte[] imageBytes) {
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("file", new ByteArrayResource(imageBytes) {
+            @Override
+            public String getFilename() {
+                return "image.jpg"; // 파일 이름 설정 (임의)
+            }
+        });
+        return body;
+    }
+
+    /**
+     * AI 분석 결과를 기반으로 가구 추천
      *
-     * @param imageBytes 이미지 파일 바이트
-     * @param category   사용자 선택한 가구 카테고리
+     * @param aiAnalysisResult AI 서버로부터 받은 분석 결과 (스타일 정보 등)
      * @return 스타일별 2개씩 추천된 제품 리스트
      */
-    public List<Product> recommendProductsFromAI(byte[] imageBytes, String category) {
-        // 1. AI 서버에 이미지 바이트 전달 → 이미지 임베딩 추출
-        float[] imageEmbedding = requestImageEmbedding(imageBytes);
+    public List<Product> recommendProductsFromAIAnalysis(Map<String, Object> aiAnalysisResult) {
+        String roomStyle = (String) aiAnalysisResult.getOrDefault("style", "unknown");
+        // AI 분석 결과에서 필요한 정보 추출 (예: 색상, 재질 등)
+        // List<String> colorPalette = (List<String>) aiAnalysisResult.getOrDefault("color_palette", Collections.emptyList());
+        // List<String> materials = (List<String>) aiAnalysisResult.getOrDefault("materials", Collections.emptyList());
 
-        // 2. 스타일별로 2개씩 추천
+        // 현재는 모든 카테고리의 상품을 대상으로 추천하고 있습니다.
+        // 특정 카테고리의 상품만 추천하려면 컨트롤러에서 전달받거나,
+        // 이 메서드의 파라미터로 카테고리를 추가해야 합니다.
+        List<Product> allProducts = productRepository.findAll(); // 모든 상품 조회
         List<Product> recommendedProducts = new ArrayList<>();
         Set<String> processedStyles = new HashSet<>();
 
-        // 3. 카테고리 내 모든 제품을 가져오지 않고, 스타일별로 2개씩 가져오기
-        List<Product> allProducts = productRepository.findByCategory(category);
-
         for (Product product : allProducts) {
-            // detail 객체에서 스타일 정보를 추출
-            String style = extractStyleFromDetail(product.getDetail());
-
-            // 이미 해당 스타일이 추가된 경우 넘어감
-            if (processedStyles.contains(style)) {
+            String productStyle = extractStyleFromDetail(product.getDetail());
+            if (processedStyles.contains(productStyle)) {
                 continue;
             }
 
-            // 해당 스타일에 맞는 제품 2개 가져오기
-            List<Product> styleProducts = allProducts.stream()
-                    .filter(p -> extractStyleFromDetail(p.getDetail()).equals(style))  // detail에서 스타일 비교
-                    .limit(2)  // 스타일당 2개만 추천
-                    .collect(Collectors.toList());
-
-            recommendedProducts.addAll(styleProducts);
-            processedStyles.add(style);  // 처리된 스타일은 다시 추천하지 않음
+            // 간단한 스타일 기반 필터링
+            if (productStyle.contains(roomStyle) || roomStyle.contains(productStyle)) {
+                recommendedProducts.add(product);
+                processedStyles.add(productStyle);
+                if (processedStyles.size() >= 2) { // 예시: 최대 스타일별 2개
+                    break;
+                }
+            }
         }
 
         return recommendedProducts;
     }
 
     /**
-     * FastAPI 서버로부터 이미지 임베딩 추출 요청
-     */
-    private float[] requestImageEmbedding(byte[] imageBytes) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-
-        HttpEntity<byte[]> requestEntity = new HttpEntity<>(imageBytes, headers);
-
-        ResponseEntity<String> response = restTemplate.postForEntity(
-                AI_IMAGE_EMBEDDING_URL, requestEntity, String.class
-        );
-
-        if (response.getStatusCode() != HttpStatus.OK) {
-            throw new RuntimeException("AI 서버로부터 임베딩을 받지 못했습니다.");
-        }
-
-        // Jackson ObjectMapper를 이용하여 JSON 파싱
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            JsonNode jsonNode = objectMapper.readTree(response.getBody());
-            JsonNode embeddingNode = jsonNode.get("embedding");
-
-            // 임베딩 데이터를 리스트로 변환
-            List<Double> doubleList = new ArrayList<>();
-            embeddingNode.forEach(node -> doubleList.add(node.asDouble()));
-
-            // float 배열로 변환
-            float[] embedding = new float[doubleList.size()];
-            for (int i = 0; i < doubleList.size(); i++) {
-                embedding[i] = doubleList.get(i).floatValue();
-            }
-
-            return embedding;
-        } catch (Exception e) {
-            throw new RuntimeException("JSON 파싱 중 오류가 발생했습니다.", e);
-        }
-    }
-
-    /**
-     * detail 객체에서 스타일 정보를 추출
+     * detail 객체에서 스타일 정보를 추출 (기존 코드 유지)
      */
     private String extractStyleFromDetail(String detail) {
-        // "스타일 정보:" 뒤의 내용을 추출
         String stylePrefix = "스타일 정보:";
         int styleIndex = detail.indexOf(stylePrefix);
 
         if (styleIndex == -1) {
-            return "기타";  // 스타일 정보가 없으면 기타로 처리
+            return "기타";
         }
 
-        // 스타일 정보 이후 부분만 추출
         String styleInfo = detail.substring(styleIndex + stylePrefix.length()).trim();
-
-        // 스타일 정보 중 첫 문장만 추출 (줄바꿈이 있을 경우 첫 문장을 사용)
         int endOfStyleInfo = styleInfo.indexOf("\n");
         if (endOfStyleInfo != -1) {
             styleInfo = styleInfo.substring(0, endOfStyleInfo).trim();
