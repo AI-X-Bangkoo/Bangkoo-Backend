@@ -23,6 +23,14 @@ public class CandidateFeedbackService {
     public void saveImpressions(List<Map<String,Object>> candidates, String userId) {
         Date now = new Date();
         for (Map<String,Object> cand : candidates) {
+
+            Object rawLink = cand.get("링크");
+            if (rawLink == null) {
+                // '링크' 필드가 없으면 로그만 남기고 다음으로
+//                System.out.println("saveImpressions: '링크' 키가 없습니다. cand={}" + cand);
+                continue;
+            }
+
             String candidateId = cand.get("링크").toString();
             // id 조합
             String docId = candidateId + "_" + (userId != null ? userId : "ANON");
