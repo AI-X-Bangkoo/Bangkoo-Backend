@@ -46,9 +46,7 @@ public class SecurityConfig {
             "/swagger-resources/**",
             "/v3/api-docs/**",
             "/login",
-            "/",
             "/oauth2/**",
-            "/localhost:3000/**",
             "/error",
             "/auth/**",
             "/kakao/login",
@@ -75,6 +73,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/search/**").permitAll()
+                        .requestMatchers("/actuator/health", "/actuator/info", "/").permitAll()
                         .requestMatchers("/api/**").permitAll()
                         .requestMatchers("/api/placement").permitAll()
                         .requestMatchers("/api/placement/**").permitAll()
