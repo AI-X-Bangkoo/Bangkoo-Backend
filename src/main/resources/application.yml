@@ -5,9 +5,12 @@ spring:
     import:
       - "classpath:application-db.yml"
       - "optional:file:.env"  # .env 파일도 로드
+  docker:
+    compose:
+      enabled: false
 
 server:
-  port: 8080
+  port: ${PORT:8080}
 
 logging:
   level:
