@@ -9,7 +9,7 @@ env:
   EB_APP_NAME: ${{ secrets.EB_APP_NAME }}
   EB_ENV_NAME: ${{ secrets.EB_ENV_NAME }}
   S3_BUCKET:   ${{ secrets.S3_BUCKET }}
-  VERSION_LABEL: ${{ github.sha }}-${{ github.run_number }}
+  VERSION_LABEL: ${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
 
 jobs:
   deploy:
