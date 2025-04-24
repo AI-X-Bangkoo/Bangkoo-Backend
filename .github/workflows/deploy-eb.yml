@@ -35,9 +35,10 @@ jobs:
           cd deploy
           zip -r ../deploy.zip .
 
-      - name: List built JAR contents
+      - name: List full JAR contents for debugging
         run: |
-          unzip -l deploy/app.jar | grep application-db.yml
+          echo "=== JAR CONTENTS ==="
+          unzip -l deploy/app.jar
 
       - name: Configure AWS creds
         uses: aws-actions/configure-aws-credentials@v2
