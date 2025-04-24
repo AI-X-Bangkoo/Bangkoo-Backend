@@ -63,5 +63,13 @@ sourceSets {
         java {
             srcDirs = ['src/main/java']
         }
+        resources {
+            srcDirs = ['src/main/resources']
+            include '**/*.yml'
+        }
     }
+}
+
+bootJar {
+    from(sourceSets.main.resources)
 }
