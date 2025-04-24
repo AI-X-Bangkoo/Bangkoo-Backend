@@ -23,7 +23,7 @@ jobs:
 
       - name: Zip artifact
         run: |
-          mkdir deploy
+          mkdir -p deploy
           cp build/libs/*.jar deploy/app.jar
           echo "web: java -jar app.jar" > deploy/Procfile
           cd deploy
