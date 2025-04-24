@@ -1,12 +1,12 @@
 package com.bangkoo.back.controller.autoRecommend;
 
-import com.bangkoo.back.model.product.Product;
 import com.bangkoo.back.service.autoRecommend.AutoRecommendService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
@@ -15,33 +15,47 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AutoRecommendController {
 
+    @Value("${ai.server.url}")
+    private String aiServerUrl;  // AI 서버의 기본 URL
+
     private final AutoRecommendService autoRecommendService;
 
     /**
-     * base64 인코딩된 이미지 기반 가구 추천 API (AI 분석 후 추천)
+     * 최초 작성자: 김병훈
+     * 최초 작성일: 2025-04-22
      *
-     * @param base64Image base64 인코딩된 방 이미지
-     * @return 추천된 가구(Product) 리스트
+     * 이미지 기반 가구 추천 API (AI 분석 후 추천)
+     *
+     * @param file MultipartFile 업로드된 이미지 파일
+     * @return Redis에 저장된 추천 결과 확인 메시지
      */
-    @PostMapping("/recommend/from-image")
+    @PostMapping("/recommend/from_image")
     public ResponseEntity<?> recommendProductsFromImage(
-            @RequestParam("image") String base64Image
+            @RequestParam("file") MultipartFile file
     ) {
+
+        // 1) 파일 유효성 검사
+        if (file == null || file.isEmpty()) {
+            return ResponseEntity.badRequest().body("파일이 없습니다");
+        }
+
         try {
-            byte[] imageBytes = Base64.getDecoder().decode(base64Image);
+            // 2) Redis 저장 키 생성 (실제 서비스에서는 사용자별 키로 변경)
+            String redisKey = "user:recommend:temp";
 
-            // AI 서버에 이미지 분석 요청
-            Map<String, Object> aiAnalysisResult = autoRecommendService.requestRoomAnalysis(imageBytes);
+            // 3) AI 서버 호출 및 Redis 저장
+            //    - MultipartFile을 그대로 전달
+            List<Map<String, Object>> result = autoRecommendService.analyzeAndSaveToRedis(file, redisKey);
 
-            if (aiAnalysisResult != null && !aiAnalysisResult.isEmpty()) {
-                // AI 분석 결과를 기반으로 가구 추천
-                List<Product> recommendedProducts = autoRecommendService.recommendProductsFromAIAnalysis(aiAnalysisResult);
-                return ResponseEntity.ok(recommendedProducts);
-            } else {
-                return ResponseEntity.internalServerError().body("AI 서버로부터 분석 결과를 받지 못했습니다.");
-            }
+            // 4) 저장 확인용 출력
+            System.out.println("✅ Redis 저장 확인용 출력:");
+            System.out.println("Key: " + redisKey);
+            System.out.println("Value: " + result);
+
+            return ResponseEntity.ok("추천 결과가 Redis에 저장되었습니다");
 
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.internalServerError().body("이미지 처리 오류: " + e.getMessage());
         }
     }

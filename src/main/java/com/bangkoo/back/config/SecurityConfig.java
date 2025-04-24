@@ -62,6 +62,8 @@ public class SecurityConfig {
             "/api/detect_all_base64",
             "/api/embedding",
             "/api/recommendation",
+            "/api/analyze_room",
+            "/api/style_recommendation",
     };
 
 
