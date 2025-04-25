@@ -1,12 +1,14 @@
 package com.bangkoo.back.controller.autoRecommend;
 
 import com.bangkoo.back.service.autoRecommend.AutoRecommendService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
+import com.bangkoo.back.utils.JwtUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -15,10 +17,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AutoRecommendController {
 
-    @Value("${ai.server.url}")
-    private String aiServerUrl;  // AI 서버의 기본 URL
-
     private final AutoRecommendService autoRecommendService;
+    private final JwtUtil jwtUtil;
 
     /**
      * 최초 작성자: 김병훈
@@ -30,33 +30,47 @@ public class AutoRecommendController {
      * @return Redis에 저장된 추천 결과 확인 메시지
      */
     @PostMapping("/recommend/from_image")
-    public ResponseEntity<?> recommendProductsFromImage(
-            @RequestParam("file") MultipartFile file
+    public ResponseEntity<Map<String, String>> recommendProductsFromImage(
+            @RequestParam("file") MultipartFile file,
+            HttpServletRequest request
     ) {
-
         // 1) 파일 유효성 검사
         if (file == null || file.isEmpty()) {
-            return ResponseEntity.badRequest().body("파일이 없습니다");
+            return ResponseEntity.badRequest().body(Map.of("error", "파일이 없습니다"));
         }
 
         try {
-            // 2) Redis 저장 키 생성 (실제 서비스에서는 사용자별 키로 변경)
-            String redisKey = "user:recommend:temp";
+            // 2) JWT 토큰 원본 추출
+            String token = jwtUtil.extractToken(request);
+            if (token == null || token.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "JWT 토큰이 없습니다"));
+            }
 
-            // 3) AI 서버 호출 및 Redis 저장
-            //    - MultipartFile을 그대로 전달
-            List<Map<String, Object>> result = autoRecommendService.analyzeAndSaveToRedis(file, redisKey);
+            // 3) 토큰에서 사용자 ID(email) 추출
+            String userId = jwtUtil.getUserIdFromToken(token);
 
-            // 4) 저장 확인용 출력
-            System.out.println("✅ Redis 저장 확인용 출력:");
-            System.out.println("Key: " + redisKey);
-            System.out.println("Value: " + result);
+            // 4) AI 서버 호출 및 Redis 저장 (서비스에 실제 토큰 전달)
+            autoRecommendService.analyzeAndSaveToRedis(file, token);
 
-            return ResponseEntity.ok("추천 결과가 Redis에 저장되었습니다");
+            // 5) 클라이언트에 redisKey를 알려주기 위해 Map 형태로 리턴
+            Map<String, String> body = new HashMap<>();
+            body.put("redisKey", userId);
+            return ResponseEntity.ok(body);
 
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.internalServerError().body("이미지 처리 오류: " + e.getMessage());
+            return ResponseEntity
+                    .internalServerError()
+                    .body(Map.of("error", "이미지 처리 오류: " + e.getMessage()));
         }
+    }
+
+    @GetMapping("/recommend/from_image/{redisKey}")
+    public ResponseEntity<List<Map<String,Object>>> getRecommendationsFromRedis(
+            @PathVariable String redisKey
+    ) {
+        List<Map<String, Object>> result =
+                autoRecommendService.getRecommendationsFromRedis(redisKey);
+        return ResponseEntity.ok(result);
     }
 }
