@@ -3,8 +3,8 @@ name: Deploy to Elastic Beanstalk
 on:
   push:
     branches:
-      - dev
-
+#      - dev      # 개발용
+       - main
 env:
   EB_APP_NAME: ${{ secrets.EB_APP_NAME }}
   EB_ENV_NAME: ${{ secrets.EB_ENV_NAME }}
