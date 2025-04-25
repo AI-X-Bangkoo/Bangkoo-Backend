@@ -52,7 +52,7 @@ public class PlacementController {
         if (mode.equals("add") && (reference == null || reference.isEmpty())) {
             throw new ResponseStatusException(BAD_REQUEST, "'add' 모드일 경우 reference 이미지는 필수입니다.");
         }
-
+        System.out.println("mode: "+mode);
         // 처리 위임
         String base64 = placementService.sendToAiServer(mode, background, reference);
         return ResponseEntity.ok(base64);
