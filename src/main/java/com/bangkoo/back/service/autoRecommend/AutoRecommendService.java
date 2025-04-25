@@ -48,7 +48,7 @@ public class AutoRecommendService {
                 throw new RuntimeException("유효하지 않은 JWT 토큰입니다.");
             }
 
-            String redisKey = "recommendations:" + useId; // Redis 키 설정
+            // Redis 키 설정
 
 
             // 1) AI 서버 호출 준비
@@ -79,11 +79,11 @@ public class AutoRecommendService {
 
             // 4) Redis에 저장
             String json = objectMapper.writeValueAsString(recommendations);
-            redisTemplate.opsForValue().set(redisKey, json);
-            System.out.println("Redis 저장 완료 key=" + redisKey + ", count=" + recommendations.size());
+            redisTemplate.opsForValue().set(useId, json);
+            System.out.println("Redis 저장 완료 key=" + useId + ", count=" + recommendations.size());
 
             // 5) 저장된 값 확인
-            String stored = redisTemplate.opsForValue().get(redisKey);
+            String stored = redisTemplate.opsForValue().get(useId);
             System.out.println(stored != null ? "Redis에 저장된 JSON: " + stored : "Redis에 값이 없습니다.");
 
             return recommendations;

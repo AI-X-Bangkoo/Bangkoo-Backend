@@ -67,7 +67,7 @@ public class AutoRecommendController {
 
     @GetMapping("/recommend/from_image/{redisKey}")
     public ResponseEntity<List<Map<String,Object>>> getRecommendationsFromRedis(
-            @PathVariable String redisKey
+            @PathVariable("redisKey") String redisKey
     ) {
         List<Map<String, Object>> result =
                 autoRecommendService.getRecommendationsFromRedis(redisKey);
