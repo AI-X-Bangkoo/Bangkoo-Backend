@@ -1,6 +1,7 @@
 package com.bangkoo.back.service.search;
 
 import com.bangkoo.back.utils.MultipartInputStreamFileResource;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -9,6 +10,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.io.IOException;
 import java.util.List;
@@ -27,6 +29,12 @@ public class SearchService {
 
     @Autowired
     private SearchLogService searchLogService;
+
+    @Autowired
+    private CandidateFeedbackService feedbackService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Value("${ai.server.url}")
     private String aiServerUrl;
@@ -80,6 +88,21 @@ public class SearchService {
 
         HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(body, headers);
         String fastapiUrl = aiServerUrl + "/search";
-        return restTemplate.postForObject(fastapiUrl, request, String.class);
+
+        // 1) AI 서버 호출
+        String resultJson = restTemplate.postForObject(fastapiUrl, request, String.class);
+
+        // 2) JSON 파싱 → List<Map<String,Object>>
+        List<Map<String,Object>> candidates = objectMapper.readValue(
+                resultJson,
+                new TypeReference<List<Map<String,Object>>>() {}
+        );
+
+        // 3) 인상 로그 저장 (userId 포함)
+        feedbackService.saveImpressions(candidates, userId);
+
+        // 4) 원본 JSON 그대로 반환
+        return resultJson;
+
     }
 }

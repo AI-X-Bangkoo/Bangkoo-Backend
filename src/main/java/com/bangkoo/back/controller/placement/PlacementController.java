@@ -49,9 +49,9 @@ public class PlacementController {
             throw new ResponseStatusException(BAD_REQUEST, "배경 이미지가 첨부되지 않았습니다.");
         }
 
-        if (mode.equals("add") && (reference == null || reference.isEmpty())) {
-            throw new ResponseStatusException(BAD_REQUEST, "'add' 모드일 경우 reference 이미지는 필수입니다.");
-        }
+//        if (mode.equals("add") && (reference == null || reference.isEmpty())) {
+//            throw new ResponseStatusException(BAD_REQUEST, "'add' 모드일 경우 reference 이미지는 필수입니다.");
+//        }
         System.out.println("mode: "+mode);
         // 처리 위임
         String base64 = placementService.sendToAiServer(mode, background, reference);

@@ -1,17 +1,24 @@
 spring:
   profiles:
-    active: dev
+    active: ${SPRING_PROFILES_ACTIVE:dev}
   config:
     import:
-      - "classpath:application-db.yml"
+      - "optional:classpath:application-db.yml"
       - "optional:file:.env"  # .env 파일도 로드
+  data:
+    mongodb:
+      # EB 환경프로퍼티로 넘긴 SPRING_DATA_MONGODB_URI 사용
+      uri: ${SPRING_DATA_MONGODB_URI}
+  docker:
+    compose:
+      enabled: false
   servlet:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
 
 server:
-  port: 8080
+  port: ${PORT:8080}
 
 logging:
   level:

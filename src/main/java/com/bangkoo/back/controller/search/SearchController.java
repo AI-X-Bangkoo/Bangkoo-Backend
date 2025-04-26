@@ -44,7 +44,7 @@ public class SearchController {
             @RequestParam(required = false) Integer maxPrice,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String style,
-            @RequestParam(required = false) String userId
+            @RequestParam(name = "userId", required = false) String userId
     ) throws IOException {
         String result = searchService.recommendOrSearch(image, query, minPrice, maxPrice, keyword, style,image_url, userId);
         return ResponseEntity.ok(result);
