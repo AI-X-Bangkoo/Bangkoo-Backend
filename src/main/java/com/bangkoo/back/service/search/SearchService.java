@@ -51,11 +51,13 @@ public class SearchService {
             MultipartFile image,
             String query,
             String image_url,
-            String userId
+            String userId,
+            Boolean autoSave
     ) throws IOException {
 
-        if (userId != null && query != null && !query.isEmpty()) {
-            searchLogService.saveSearchLog(query, userId, image != null ? "image+text" : "text");
+        if (autoSave && userId != null && query != null && !query.isBlank()) {
+            String source = image != null ? "image+text" : "text";
+            searchLogService.saveSearchLog(query, userId, source);
         }
 
         HttpHeaders headers = new HttpHeaders();
