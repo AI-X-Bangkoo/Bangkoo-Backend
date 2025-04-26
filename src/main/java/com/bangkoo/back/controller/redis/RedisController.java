@@ -30,7 +30,7 @@ public class RedisController {
      */
     @PostMapping("/state")
     public ResponseEntity<String> pushState(
-            @RequestParam String sessionId,
+            @RequestParam("sessionId") String sessionId,
             @RequestBody String base64,
             HttpServletRequest request
     ) {
@@ -44,7 +44,7 @@ public class RedisController {
      */
     @PostMapping("/undo")
     public ResponseEntity<?> undo(
-            @RequestParam String sessionId,
+            @RequestParam("sessionId") String sessionId,
             HttpServletRequest request
     ) {
         String userId = jwtUtil.getUserIdFromToken(jwtUtil.extractToken(request));
@@ -57,7 +57,7 @@ public class RedisController {
      */
     @PostMapping("/redo")
     public ResponseEntity<?> redo(
-            @RequestParam String sessionId,
+            @RequestParam("sessionId") String sessionId,
             HttpServletRequest request
     ) {
         String userId = jwtUtil.getUserIdFromToken(jwtUtil.extractToken(request));
@@ -70,7 +70,7 @@ public class RedisController {
      */
     @GetMapping("/state")
     public ResponseEntity<?> getCurrent(
-            @RequestParam String sessionId,
+            @RequestParam("sessionId") String sessionId,
             HttpServletRequest request
     ) {
         String userId = jwtUtil.getUserIdFromToken(jwtUtil.extractToken(request));
@@ -83,7 +83,7 @@ public class RedisController {
      */
     @DeleteMapping("/clear")
     public ResponseEntity<String> clearSession(
-            @RequestParam String sessionId,
+            @RequestParam("sessionId") String sessionId,
             HttpServletRequest request
     ) {
         String userId = jwtUtil.getUserIdFromToken(jwtUtil.extractToken(request));

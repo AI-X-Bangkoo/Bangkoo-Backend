@@ -50,10 +50,6 @@ public class SearchService {
     public String recommendOrSearch(
             MultipartFile image,
             String query,
-            Integer minPrice,
-            Integer maxPrice,
-            String keyword,
-            String style,
             String image_url,
             String userId
     ) throws IOException {
@@ -80,11 +76,7 @@ public class SearchService {
             body.add("user_id", userId);
         }
 
-        if (minPrice != null) body.add("min_price", minPrice);
-        if (maxPrice != null) body.add("max_price", maxPrice);
         if (image_url != null) body.add("image_url", image_url);
-        if (keyword != null) body.add("keyword", keyword);
-        if (style != null) body.add("style", style);
 
         HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(body, headers);
         String fastapiUrl = aiServerUrl + "/search";

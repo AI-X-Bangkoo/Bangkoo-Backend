@@ -41,7 +41,7 @@ public class JwtUtil {
 
     // ====== JWT 생성 ======
     public String generateAccessToken(String id, String email, String nickname, String role) {
-        return Jwts.builder()
+        String token = Jwts.builder()
                 .setSubject(email)
                 .claim("id", id)
                 .claim("nickname", nickname)
@@ -50,6 +50,8 @@ public class JwtUtil {
                 .setExpiration(new Date(System.currentTimeMillis() + jwtProperties.getAccessTokenExpirationMs()))
                 .signWith(secretKey, SignatureAlgorithm.HS256)
                 .compact();
+        System.out.println("Generated JWT Token: " + token);  // 여기서 토큰을 출력하여 확인
+        return token;
     }
 
     public String generateRefreshToken(String email) {
@@ -115,11 +117,17 @@ public class JwtUtil {
     }
 
     public Claims getClaims(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(secretKey)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(secretKey)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (JwtException | IllegalArgumentException e) {
+            // 여기에 예외를 기록하여 어떤 문제가 있는지 파악
+            System.out.println("JWT 토큰 오류:"+e.getMessage());
+            throw e;
+        }
     }
 
     /**
@@ -163,7 +171,8 @@ public class JwtUtil {
         // ✅ 2. Authorization 헤더에서 Bearer 토큰 찾기 (백업 플랜)
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            return authHeader.substring(7); // "Bearer " 제거
+            String token = authHeader.substring(7); // "Bearer " 제거
+            return token;
         }
 
         return null; // 둘 다 없으면 null
@@ -196,9 +205,31 @@ public class JwtUtil {
      * @return 사용자 ID (String)
      */
     public String getUserIdFromToken(String token) {
-        Claims claims = parseClaims(token);
-        return claims.get("id", String.class);
+        if (token == null || token.isEmpty()) {
+            throw new IllegalArgumentException("JWT Token cannot be null or empty");
+        }
+
+        System.out.println("JWT Token: " + token);  // 토큰이 제대로 전달되었는지 로그로 확인
+
+        try {
+            // 클레임 파싱
+            Claims claims = parseClaims(token);
+
+            // JWT의 subject (사용자 ID) 반환
+            String userId = claims.getSubject();
+
+            if (userId == null || userId.isEmpty()) {
+                throw new IllegalArgumentException("User ID is missing in the JWT claims");
+            }
+
+            return userId;
+        } catch (JwtException | IllegalArgumentException e) {
+            // 예외가 발생하면 로그를 남기고, 적절한 메시지를 반환
+            System.err.println("JWT Token Parsing Error: " + e.getMessage());
+            throw new IllegalArgumentException("Invalid JWT Token", e);
+        }
     }
+
 
     /**
      * use인지 admin인지
