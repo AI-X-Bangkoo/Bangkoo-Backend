@@ -59,7 +59,11 @@ public class SecurityConfig {
             "/api/placement/**",
             "/api/3d-url/**",
             "/api/products/dummy",
-            "/api/detect_all_base64"
+            "/api/detect_all_base64",
+            "/api/embedding",
+            "/api/recommendation",
+            "/api/analyze_room",
+            "/api/style_recommendation",
     };
 
 
@@ -98,7 +102,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("https://bangkoo.store", "https://www.bangkoo.store", "https://api.bangkoo.store"));
+//        configuration.setAllowedOrigins(Arrays.asList("https://bangkoo.store", "https://www.bangkoo.store", "https://api.bangkoo.store"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true); // HttpOnly 쿠키 사용 시 필요

@@ -35,9 +35,9 @@ public class PlacementController {
      */
     @PostMapping(value = "/placement", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> generatePlacement(
-            @RequestParam String mode,
-            @RequestParam MultipartFile background,
-            @RequestParam(required = false) MultipartFile reference
+            @RequestParam("mode") String mode,
+            @RequestParam("background") MultipartFile background,
+            @RequestParam(value = "reference",required = false) MultipartFile reference
     ) throws IOException {
 
         // 요청 검증
@@ -63,8 +63,8 @@ public class PlacementController {
      */
     @PostMapping(value = "/placement/save", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> savePlacementImage(
-            @RequestParam MultipartFile file,
-            @RequestParam String explanation,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("explanation") String explanation,
             HttpServletRequest request
     ) throws IOException {
 

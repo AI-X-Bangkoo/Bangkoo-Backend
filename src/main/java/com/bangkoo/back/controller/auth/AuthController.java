@@ -52,7 +52,7 @@ public class AuthController {
     public ResponseEntity<?> callback(@RequestParam("code") String code,
                                       HttpServletResponse response) {
         try {
-            System.out.println("code = " + code);
+
             TokenResponseDTO tokenDto = socialOAuthService.kakaoLogin(code);
 
             // JWT → HttpOnly 쿠키로 저장

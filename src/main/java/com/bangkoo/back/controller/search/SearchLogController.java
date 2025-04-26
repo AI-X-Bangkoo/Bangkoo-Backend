@@ -36,8 +36,8 @@ public class SearchLogController {
      * @param source  검색 출처 (예: text, image+text)
      */
     @PostMapping
-    public void saveSearchLog(@RequestParam String query,
-                              @RequestParam String userId,
+    public void saveSearchLog(@RequestParam("query") String query,
+                              @RequestParam("userId") String userId,
                               @RequestParam(defaultValue = "text") String source) {
         searchLogService.saveSearchLog(query, userId, source);
     }
@@ -50,7 +50,7 @@ public class SearchLogController {
      * @return 최근 검색어 리스트
      */
     @GetMapping("/recent")
-    public List<String> getRecent(@RequestParam String userId,
+    public List<String> getRecent(@RequestParam("userId") String userId,
                                   @RequestParam(defaultValue = "10") int limit) {
         return searchLogService.getRecentSearches(userId, limit);
     }
@@ -73,7 +73,7 @@ public class SearchLogController {
      * @return 삭제된 검색어 수
      */
     @DeleteMapping
-    public long deleteAll(@RequestParam String userId) {
+    public long deleteAll(@RequestParam("userId") String userId) {
         return searchLogService.deleteAll(userId);
     }
 
@@ -85,7 +85,7 @@ public class SearchLogController {
      * @return 삭제된 문서 수 (0 또는 1)
      */
     @DeleteMapping("/item")
-    public long deleteOne(@RequestParam String userId, @RequestParam String query) {
+    public long deleteOne(@RequestParam("userId") String userId, @RequestParam String query) {
         return searchLogService.deleteOne(userId, query);
     }
 }

@@ -1,21 +1,28 @@
 package com.bangkoo.back.service.product;
 
+import com.bangkoo.back.dto.product.ProductsRequestDTO;
 import com.bangkoo.back.dto.product.ProductsResponseDTO;
 import com.bangkoo.back.model.product.Product;
 import com.bangkoo.back.repository.product.ProductRepository;
+import com.bangkoo.back.service.embedding.EmbeddingService;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.multipart.MultipartFile;
 
-import javax.management.Query;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,6 +33,7 @@ import java.util.Optional;
  */
 public class ProductService {
 
+    private final EmbeddingService embeddingService;            //임베딩 서비스 추가
     private static final Logger logger = LoggerFactory.getLogger(ProductService.class);  // Logger 객체 추가
 
     @Autowired
@@ -38,14 +46,79 @@ public class ProductService {
      */
     public Product save(Product product){
         if(product.getName() == null || product.getImageUrl() == null){
-            logger.error("제품명과 이미지 URL은 필수입니다.");  // 로그 출력
+            logger.error("제품명과 이미지 URL은 필수입니다.");
             throw new IllegalArgumentException("제품명과 이미지 URL은 필수입니다.");
         }
 
+        List<Double> imageEmbedding = embeddingService.generateImageEmbedding(product.getImageUrl());
+        List<Double> textEmbedding = embeddingService.generateTextEmbedding(product.getDescription());
+        List<Double> combined = combineEmbeddings(imageEmbedding, textEmbedding); // ✅ 추가
+
+        product.setImageEmbedding(imageEmbedding);
+        product.setTextEmbedding(textEmbedding);
+        product.setCombinedEmbedding(combined); // ✅ 추가
+
         product.setCreatedAt(LocalDateTime.now());
-        logger.info("새로운 제품 저장: {}", product.getName());  // 로그 출력
+        logger.info("새로운 제품 저장: {}", product.getName());
+
         return productRepository.save(product);
     }
+
+    /**
+     * CSV파일을 저장
+     */
+    public List<Product> saveProductsFromJson(List<ProductsRequestDTO> productsDtoList) {
+        List<Product> savedProducts = new ArrayList<>();
+
+        // 🔹 Step 1: 모든 이미지 URL 추출
+        List<String> imageUrls = productsDtoList.stream()
+                .map(ProductsRequestDTO::getImageUrl)
+                .toList();
+
+        // 🔹 Step 2: 이미지 임베딩 한 번에 요청
+        List<List<Double>> imageEmbeddings = embeddingService.generateImageEmbeddings(imageUrls);
+
+        for (int i = 0; i < productsDtoList.size(); i++) {
+            ProductsRequestDTO dto = productsDtoList.get(i);
+            try {
+                Product product = Product.builder()
+                        .name(dto.getName())
+                        .description(dto.getDescription())
+                        .detail(dto.getDetail())
+                        .price(dto.getPrice())
+                        .link(dto.getLink())
+                        .imageUrl(dto.getImageUrl())
+                        .model3dUrl(dto.getModel3dUrl())
+                        .csv(dto.getCsv())
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
+                        .build();
+
+                // 🔹 이미지 임베딩
+                List<Double> imageEmbedding = imageEmbeddings.get(i);
+                if (imageEmbedding == null || imageEmbedding.isEmpty()) {
+                    logger.warn("이미지 임베딩 실패 - 제품명: {}", dto.getName());
+                    continue; // skip 저장
+                }
+
+                // 🔹 텍스트 임베딩 및 결합
+                List<Double> textEmbedding = embeddingService.generateTextEmbedding(product.getDescription());
+                List<Double> combined = combineEmbeddings(imageEmbedding, textEmbedding);
+
+                product.setImageEmbedding(imageEmbedding);
+                product.setTextEmbedding(textEmbedding);
+                product.setCombinedEmbedding(combined);
+
+                savedProducts.add(productRepository.save(product));
+            } catch (Exception e) {
+                logger.warn("임베딩 또는 저장 실패 - 제품명: {}, 오류: {}", dto.getName(), e.getMessage());
+            }
+        }
+
+        return savedProducts;
+    }
+
+
 
     /**
      * 기존 제품을 수정합니다. 해당 ID로 제품을 찾고, 값들을 업데이트한 후 저장합니다.
@@ -60,6 +133,7 @@ public class ProductService {
             product.setId(updated.getId());
             product.setName(updated.getName());
             product.setDescription(updated.getDescription());
+            product.setModel3dUrl(updated.getModel3dUrl());
             product.setDetail(updated.getDetail());
             product.setPrice(updated.getPrice());
             product.setLink(updated.getLink());
@@ -95,9 +169,7 @@ public class ProductService {
      */
     public Page<Product> findAll(int page, int size){
         Pageable pageable = PageRequest.of(page, size);
-        logger.info("페이징 요청 들어옴 page: {}, size: {}", page, size);
         Page<Product> result = productRepository.findAll(pageable);
-        logger.info("페이지 조회 결과: {}", result.getTotalElements()); // 여기 안 나오면 바로 터지는 것
         return result;
     }
 
@@ -108,10 +180,8 @@ public class ProductService {
      * @return 조회된 제품 객체
      */
     public Product findById(String id){
-        logger.info("제품 조회: ID {}", id);  // 로그 출력
         return productRepository.findById(id)
                 .orElseThrow(() -> {
-                    logger.error("제품을 찾지 못 했습니다. ID: {}", id);  // 로그 출력
                     return new RuntimeException("제품을 찾지 못 했습니다.");
                 });
     }
@@ -121,7 +191,6 @@ public class ProductService {
      * DTO로 변환해서 리스트로 만들기
      */
     public List<ProductsResponseDTO> getAllProducts() {
-        logger.info("모든 제품 조회");  // 로그 출력
         List<Product> products = productRepository.findAll();
         return products.stream().map(product -> {
             ProductsResponseDTO dto = new ProductsResponseDTO();
@@ -151,4 +220,67 @@ public class ProductService {
 
     }
 
+    /**
+     * CSV 업로드 및 저장 기능
+     */
+
+    public List<Product> saveProductFromCSV(MultipartFile file) throws Exception {
+        List<Product> savedProducts = new ArrayList<>();
+
+        try (Reader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
+            CSVReader csvReader = new CSVReaderBuilder(reader).withSkipLines(1).build(); // 헤더 스킵
+            List<String[]> rows = csvReader.readAll();
+
+            for (String[] row : rows) {
+                if (row.length < 8) continue;
+
+                Product product = Product.builder()
+                        .name(row[0])
+                        .description(row[1])
+                        .detail(row[2])
+                        .price(row[3])
+                        .link(row[4])
+                        .imageUrl(row[5])
+                        .model3dUrl(row[6])
+                        .csv(row[7])
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
+                        .build();
+
+                try {
+                    List<Double> imageEmbedding = embeddingService.generateImageEmbedding(product.getImageUrl());
+                    List<Double> textEmbedding = embeddingService.generateTextEmbedding(product.getDescription());
+                    List<Double> combined = combineEmbeddings(imageEmbedding, textEmbedding);
+
+                    product.setImageEmbedding(imageEmbedding);
+                    product.setTextEmbedding(textEmbedding);
+                    product.setCombinedEmbedding(combined);
+                } catch (Exception e) {
+                    logger.warn("임베딩 실패 - 제품명: {}", product.getName());
+                }
+
+                savedProducts.add(productRepository.save(product));
+            }
+
+        } catch (Exception e) {
+            logger.error("CSV 처리 중 오류 발생", e);
+            throw new Exception("CSV 처리 중 오류 발생: " + e.getMessage());
+        }
+
+        return savedProducts;
+    }
+
+    // ✅ 이미지/텍스트 임베딩 결합 메서드
+    public List<Double> combineEmbeddings(List<Double> image, List<Double> text) {
+        List<Double> combined = new ArrayList<>();
+        for (int i = 0; i < Math.min(image.size(), text.size()); i++) {
+            combined.add((image.get(i) + text.get(i)) / 2.0);
+        }
+        return combined;
+    }
+
+    //다수의 상품 관련
+    public List<Product> saveAll(List<Product> products) {
+        return productRepository.saveAll(products);
+    }
 }
