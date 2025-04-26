@@ -37,7 +37,7 @@ public class PlacementController {
     public ResponseEntity<String> generatePlacement(
             @RequestParam("mode") String mode,
             @RequestParam("background") MultipartFile background,
-            @RequestParam(required = false) MultipartFile reference
+            @RequestParam(value = "reference",required = false) MultipartFile reference
     ) throws IOException {
 
         // 요청 검증
