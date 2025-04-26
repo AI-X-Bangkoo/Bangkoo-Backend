@@ -43,19 +43,16 @@ public class SearchController {
             @RequestParam(name = "userId", required = false) String userId,
             @RequestParam(name = "autoSave", required = false, defaultValue = "true") boolean autoSave
     ) throws IOException {
-        if (autoSave) {
-            String source;
-            if (image != null && query != null && !query.isBlank()) {
-                source = "image+text";
-            } else if (image != null) {
-                source = "image";
-            } else {
-                source = "text";
-            }
-            searchLogService.saveSearchLog(query, userId, source);
-        }
+        System.out.println("[DEBUG] autoSave = " + autoSave);
+        String result = searchService.recommendOrSearch(
+                image,
+                query,
+                image_url,
+                userId,
+                autoSave    // ← 여기
+        );
 
-        String result = searchService.recommendOrSearch(image, query, image_url, userId);
+//        String result = searchService.recommendOrSearch(image, query, image_url, userId);
         return ResponseEntity.ok(result);
     }
 }
